@@ -9,7 +9,7 @@ const HomeCards = () => {
           <Card>
             <h2 className='text-2xl font-bold'>For Developers</h2>
             <p className='mt-2 mb-4'>
-              Browse our React jobs and start your career today
+              Browse our A.I Agency jobs and start your career today
             </p>
             <Link
               to='/jobs'
@@ -18,7 +18,7 @@ const HomeCards = () => {
               Browse Jobs
             </Link>
           </Card>
-          <Card bg='bg-indigo-100'>
+          <Card bg='bg-blue-100'>
             <h2 className='text-2xl font-bold'>For Employers</h2>
             <p className='mt-2 mb-4'>
               List your job to find the perfect developer for the role

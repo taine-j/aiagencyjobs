@@ -7,7 +7,7 @@ const AddJobPage = ({ addJobSubmit }) => {
   const [type, setType] = useState('Full-Time');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
-  const [salary, setSalary] = useState('Under $50K');
+  const [price, setPrice] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [companyDescription, setCompanyDescription] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -23,7 +23,7 @@ const AddJobPage = ({ addJobSubmit }) => {
       type,
       location,
       description,
-      salary,
+      price,
       company: {
         name: companyName,
         description: companyDescription,
@@ -61,10 +61,8 @@ const AddJobPage = ({ addJobSubmit }) => {
                 value={type}
                 onChange={(e) => setType(e.target.value)}
               >
-                <option value='Full-Time'>Full-Time</option>
-                <option value='Part-Time'>Part-Time</option>
-                <option value='Remote'>Remote</option>
-                <option value='Internship'>Internship</option>
+                <option value='One Off'>One Off</option>
+                <option value='On Going'>On Going</option>
               </select>
             </div>
 
@@ -77,7 +75,7 @@ const AddJobPage = ({ addJobSubmit }) => {
                 id='title'
                 name='title'
                 className='border rounded w-full py-2 px-3 mb-2'
-                placeholder='eg. Beautiful Apartment In Miami'
+                placeholder='eg. Appointment Setting Chatbot Development'
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -95,7 +93,7 @@ const AddJobPage = ({ addJobSubmit }) => {
                 name='description'
                 className='border rounded w-full py-2 px-3'
                 rows='4'
-                placeholder='Add any job duties, expectations, requirements, etc'
+                placeholder='Add any job duties, expectations, tech stack requirements, etc'
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               ></textarea>
@@ -103,31 +101,22 @@ const AddJobPage = ({ addJobSubmit }) => {
 
             <div className='mb-4'>
               <label
-                htmlFor='type'
+                htmlFor='price'
                 className='block text-gray-700 font-bold mb-2'
               >
-                Salary
+                Price
               </label>
-              <select
-                id='salary'
-                name='salary'
+              <textarea
+                id='price'
+                name='price'
                 className='border rounded w-full py-2 px-3'
+                rows='1'
+                placeholder='$200 on project completion, $50 per hour, etc'
                 required
-                value={salary}
-                onChange={(e) => setSalary(e.target.value)}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
               >
-                <option value='Under $50K'>Under $50K</option>
-                <option value='$50K - 60K'>$50K - $60K</option>
-                <option value='$60K - 70K'>$60K - $70K</option>
-                <option value='$70K - 80K'>$70K - $80K</option>
-                <option value='$80K - 90K'>$80K - $90K</option>
-                <option value='$90K - 100K'>$90K - $100K</option>
-                <option value='$100K - 125K'>$100K - $125K</option>
-                <option value='$125K - 150K'>$125K - $150K</option>
-                <option value='$150K - 175K'>$150K - $175K</option>
-                <option value='$175K - 200K'>$175K - $200K</option>
-                <option value='Over $200K'>Over $200K</option>
-              </select>
+              </textarea>
             </div>
 
             <div className='mb-4'>

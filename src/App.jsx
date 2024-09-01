@@ -11,6 +11,12 @@ import NotFoundPage from './pages/NotFoundPage';
 import JobPage, { jobLoader } from './pages/JobPage';
 import AddJobPage from './pages/AddJobPage';
 import EditJobPage from './pages/EditJobPage';
+import SignUpCompanyPage from './pages/SignUpCompanyPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import LoginPage from './pages/LoginPage';
+import LogoutPage from './pages/LogoutPage';
+import ProfilePage from './pages/ProfilePage';
 
 const App = () => {
   // Add New Job
@@ -49,6 +55,7 @@ const App = () => {
     createRoutesFromElements(
       <Route path='/' element={<MainLayout />}>
         <Route index element={<HomePage />} />
+        <Route path='/sign-up-company' element={<SignUpCompanyPage />} />
         <Route path='/jobs' element={<JobsPage />} />
         <Route path='/add-job' element={<AddJobPage addJobSubmit={addJob} />} />
         <Route
@@ -61,6 +68,11 @@ const App = () => {
           element={<JobPage deleteJob={deleteJob} />}
           loader={jobLoader}
         />
+        <Route path='/privacy-policy' element={<PrivacyPolicyPage />} />
+        <Route path='/terms-of-service' element={<TermsOfServicePage />} />
+        <Route path='/login' element={<LoginPage />} />
+        <Route path='/logout' element={<LogoutPage />} />
+        <Route path='/profile' element={<ProfilePage />} /> 
         <Route path='*' element={<NotFoundPage />} />
       </Route>
     )

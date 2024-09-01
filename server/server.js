@@ -3,6 +3,11 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import { configureAuth } from './auth.js';
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -16,6 +21,14 @@ app.use(express.static(path.join(__dirname, '../src')));
 // Middleware to parse JSON data
 app.use(express.json());
 
+// Enable CORS
+app.use(cors());
+
+// Configure authentication
+configureAuth(app);
+
+
+// JOBS
 // Route to get all jobs with optional limit
 app.get('/jobs', (req, res) => {
     const limit = parseInt(req.query._limit, 10); // Get the _limit query parameter and convert to integer
