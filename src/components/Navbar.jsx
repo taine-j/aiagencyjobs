@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import logo from '../assets/images/logo.png';
 
-const Navbar = () => {
+const Navbar = ( { isAuthenticated } ) => {
   const linkClass = ({ isActive }) =>
     isActive
       ? 'bg-black text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2'
@@ -29,12 +29,21 @@ const Navbar = () => {
                 <NavLink to='/add-job' className={linkClass}>
                   Add Job
                 </NavLink>
+                {!isAuthenticated && (
                 <NavLink to='/login' className={linkClass}>
-                  Login
+                  Sign In / Sign Up
                 </NavLink>
+                )}
+                {isAuthenticated && (
                 <NavLink to='/logout' className={linkClass}>
                   Logout
                 </NavLink>
+                )}
+                {isAuthenticated && (
+                <NavLink to='/profile' className={linkClass}>
+                  Profile 
+                </NavLink>
+                )}
               </div>
             </div>
           </div>

@@ -3,13 +3,14 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../components/Navbar';
 
-const MainLayout = () => {
+const MainLayout = ({ isAuthenticated }) => {
   return (
     <>
-      <Navbar />
+      <Navbar isAuthenticated={isAuthenticated} />
       <Outlet />
       <ToastContainer />
     </>
   );
 };
+
 export default MainLayout;

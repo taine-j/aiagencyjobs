@@ -2,7 +2,7 @@ import React from 'react'
 
 const Logout = () => {
     const handleLogout = () => {
-      window.location.href = 'http://localhost:5000/logout';
+      window.location.href = '/api/logout';
     };
   
     return (

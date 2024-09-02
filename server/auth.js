@@ -2,6 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
+import User from '../models/User.js'; // Import the User model
 
 export function configureAuth(app) {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -13,11 +14,26 @@ export function configureAuth(app) {
     clientSecret: GOOGLE_CLIENT_SECRET,
     callbackURL: '/auth/google/callback',
   },
-  (accessToken, refreshToken, profile, done) => {
-    // Here you would typically find or create a user in your database
-    return done(null, profile);
-  }
-  ));
+  async (accessToken, refreshToken, profile, done) => {
+    try {
+      // Check if the user already exists in your database
+      let user = await User.findOne({ googleId: profile.id });
+
+      if (!user) {
+        // If the user does not exist, create a new user
+        user = await User.create({
+          googleId: profile.id,
+          displayName: profile.displayName,
+          emails: profile.emails,
+          photos: profile.photos,
+        });
+      }
+
+      return done(null, user);
+    } catch (err) {
+      return done(err, null);
+    }
+  }));
 
   // Serialize user information into the session
   passport.serializeUser((user, done) => {
@@ -67,6 +83,15 @@ export function configureAuth(app) {
   });
 
   app.get('/current_user', (req, res) => {
-    res.send(req.user);
+    if (req.user) {
+      res.json({
+        id: req.user.id,
+        displayName: req.user.displayName,
+        emails: req.user.emails,
+        photos: req.user.photos
+      });
+    } else {
+      res.status(401).json({ error: 'Not authenticated' });
+    }
   });
 }

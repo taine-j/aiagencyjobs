@@ -6,6 +6,7 @@ import { dirname } from 'path';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { configureAuth } from './auth.js';
+import mongoose from 'mongoose';
 
 dotenv.config();
 

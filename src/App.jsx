@@ -2,8 +2,9 @@ import {
   Route,
   createBrowserRouter,
   createRoutesFromElements,
-  RouterProvider,
+  RouterProvider
 } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import JobsPage from './pages/JobsPage';
@@ -11,14 +12,35 @@ import NotFoundPage from './pages/NotFoundPage';
 import JobPage, { jobLoader } from './pages/JobPage';
 import AddJobPage from './pages/AddJobPage';
 import EditJobPage from './pages/EditJobPage';
-import SignUpCompanyPage from './pages/SignUpCompanyPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import LoginPage from './pages/LoginPage';
 import LogoutPage from './pages/LogoutPage';
 import ProfilePage from './pages/ProfilePage';
 
-const App = () => {
+
+  const App = () => {
+
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+    useEffect(() => {
+      // Check if the user is authenticated
+      const checkAuth = async () => {
+        try {
+          const res = await fetch('/api/current_user');
+          if (res.ok) {
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+          }
+        } catch (error) {
+          setIsAuthenticated(false);
+        }
+      };
+  
+      checkAuth();
+    }, []);
+
   // Add New Job
   const addJob = async (newJob) => {
     const res = await fetch('/api/jobs', {
@@ -53,9 +75,8 @@ const App = () => {
 
   const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route path='/' element={<MainLayout />}>
+      <Route path='/' element={<MainLayout isAuthenticated={isAuthenticated}/>}>
         <Route index element={<HomePage />} />
-        <Route path='/sign-up-company' element={<SignUpCompanyPage />} />
         <Route path='/jobs' element={<JobsPage />} />
         <Route path='/add-job' element={<AddJobPage addJobSubmit={addJob} />} />
         <Route
@@ -80,4 +101,5 @@ const App = () => {
 
   return <RouterProvider router={router} />;
 };
+
 export default App;
