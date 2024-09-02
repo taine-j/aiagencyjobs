@@ -27,7 +27,9 @@ import ProfilePage from './pages/ProfilePage';
       // Check if the user is authenticated
       const checkAuth = async () => {
         try {
-          const res = await fetch('/api/current_user');
+          const res = await fetch('/api/current_user', {
+            credentials: 'include', // Ensure cookies are sent with the request
+          });
           if (res.ok) {
             setIsAuthenticated(true);
           } else {

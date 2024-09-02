@@ -1,10 +1,16 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  googleId: { type: String, required: true, unique: true },
-  displayName: { type: String, required: true },
-  emails: { type: Array, required: true },
-  photos: { type: Array, required: true },
+  googleId: String,
+  displayName: String,
+  emails: Array,
+  photos: Array,
+  companyName: String,
+  location: String,
+  companyDescription: String,
+  techStack: String,
+  profilePicture: String,
+  useCompanyName: Boolean
 });
 
 const User = mongoose.model('User', userSchema);

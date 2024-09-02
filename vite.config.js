@@ -11,7 +11,7 @@ export default defineConfig({
         target: 'http://localhost:1967', // Ensure this matches your Express server port
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
-      },
+      }
     },
   },
 });

@@ -7,6 +7,11 @@ const Navbar = ( { isAuthenticated } ) => {
       ? 'bg-black text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2'
       : 'text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2';
 
+      const handleLogin = (e) => {
+        e.preventDefault();
+        window.location.href = '/api/auth/google';
+      };
+
   return (
     <nav className='bg-blue-700 border-b border-blue-500'>
       <div className='mx-auto max-w-7xl px-2 sm:px-6 lg:px-8'>
@@ -26,11 +31,13 @@ const Navbar = ( { isAuthenticated } ) => {
                 <NavLink to='/jobs' className={linkClass}>
                   Jobs
                 </NavLink>
+                {isAuthenticated && (
                 <NavLink to='/add-job' className={linkClass}>
                   Add Job
                 </NavLink>
+                )}
                 {!isAuthenticated && (
-                <NavLink to='/login' className={linkClass}>
+                <NavLink to='/login' onClick={handleLogin} className={linkClass}>
                   Sign In / Sign Up
                 </NavLink>
                 )}

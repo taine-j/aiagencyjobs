@@ -8,6 +8,26 @@ export function configureAuth(app) {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 
+  // Configure session middleware
+  app.use(session({ 
+    secret: process.env.SESSION_SECRET || 'your-secret-key', 
+    resave: false, 
+    saveUninitialized: false,
+    cookie: {
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      httpOnly: true
+    },
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI, // Make sure to set this in your .env file
+      ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+    })
+  }));
+
+  // Initialize Passport and restore authentication state, if any, from the session
+  app.use(passport.initialize());
+  app.use(passport.session());
+
   // Configure Passport with the Google strategy
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
@@ -37,32 +57,18 @@ export function configureAuth(app) {
 
   // Serialize user information into the session
   passport.serializeUser((user, done) => {
-    done(null, user);
+    done(null, user.id);
   });
 
   // Deserialize user information from the session
-  passport.deserializeUser((obj, done) => {
-    done(null, obj);
+  passport.deserializeUser(async (id, done) => {
+    try {
+      const user = await User.findById(id);
+      done(null, user);
+    } catch (err) {
+      done(err, null);
+    }
   });
-
-  // Configure session middleware
-  app.use(session({ 
-    secret: process.env.SESSION_SECRET || 'your-secret-key', 
-    resave: false, 
-    saveUninitialized: false,
-    cookie: {
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
-      httpOnly: true
-    },
-    store: MongoStore.create({
-      mongoUrl: process.env.MONGODB_URI, // Make sure to set this in your .env file
-      ttl: 14 * 24 * 60 * 60 // = 14 days. Default
-    })
-  }));
-
-  app.use(passport.initialize());
-  app.use(passport.session());
 
   // Auth routes
   app.get('/auth/google',
@@ -70,7 +76,7 @@ export function configureAuth(app) {
   );
 
   app.get('/auth/google/callback', 
-    passport.authenticate('google', { failureRedirect: '/' }),
+    passport.authenticate('google', { failureRedirect: 'http://localhost:3000/login' }),
     (req, res) => {
       res.redirect('http://localhost:3000');
     }
@@ -83,14 +89,24 @@ export function configureAuth(app) {
   });
 
   app.get('/current_user', (req, res) => {
+    console.log('Session:', req.session);
+    console.log('User:', req.user);
     if (req.user) {
+      console.log('User is authenticated:', req.user);
       res.json({
         id: req.user.id,
         displayName: req.user.displayName,
         emails: req.user.emails,
-        photos: req.user.photos
+        photos: req.user.photos,
+        companyName: req.user.companyName,
+        location: req.user.location,
+        companyDescription: req.user.companyDescription,
+        techStack: req.user.techStack,
+        profilePicture: req.user.profilePicture,
+        useCompanyName: req.user.useCompanyName
       });
     } else {
+      console.log('User is not authenticated');
       res.status(401).json({ error: 'Not authenticated' });
     }
   });

@@ -7,8 +7,17 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { configureAuth } from './auth.js';
 import mongoose from 'mongoose';
+import User from '../models/User.js'; // Import the User model
 
 dotenv.config();
+
+mongoose.connect(process.env.MONGODB_URI, {
+    serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+  }).then(() => {
+    console.log('Connected to MongoDB');
+  }).catch((err) => {
+    console.error('Error connecting to MongoDB:', err);
+  });
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,15 +28,15 @@ const PORT = process.env.PORT || 1967;
 // Serve static files from the 'src' directory
 app.use(express.static(path.join(__dirname, '../src')));
 
-// Middleware to parse JSON data
-app.use(express.json());
+// Middleware to parse JSON data with increased limit
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Enable CORS
 app.use(cors());
 
 // Configure authentication
 configureAuth(app);
-
 
 // JOBS
 // Route to get all jobs with optional limit
@@ -205,6 +214,24 @@ app.put('/jobs/:id', (req, res) => {
             res.status(500).json({ error: 'Error parsing JSON data' });
         }
     });
+});
+
+// Route to update user profile
+app.post('/update_profile', async (req, res) => {
+    const updatedProfile = req.body;
+
+    try {
+        // Replace with actual user ID from your authentication system
+        const userId = req.user.id; // Assuming req.user contains the authenticated user's info
+
+        // Update the user's profile in the database
+        const user = await User.findByIdAndUpdate(userId, updatedProfile, { new: true, upsert: true });
+
+        res.status(200).json(user);
+    } catch (err) {
+        console.error('Error updating profile:', err);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
 });
 
 // Catch-all handler to serve React's index.html for all unknown routes
