@@ -12,6 +12,13 @@ const Navbar = ( { isAuthenticated } ) => {
         window.location.href = '/api/auth/google';
       };
 
+      const handleLogout = (e) => {
+        e.preventDefault();
+        if (window.confirm('Are you sure you want to log out?')) {
+          window.location.href = '/api/logout';
+        }
+      };
+
   return (
     <nav className='bg-blue-700 border-b border-blue-500'>
       <div className='mx-auto max-w-7xl px-2 sm:px-6 lg:px-8'>
@@ -42,13 +49,18 @@ const Navbar = ( { isAuthenticated } ) => {
                 </NavLink>
                 )}
                 {isAuthenticated && (
-                <NavLink to='/logout' className={linkClass}>
+                <NavLink to='/logout' onClick={handleLogout} className={linkClass}>
                   Logout
                 </NavLink>
                 )}
                 {isAuthenticated && (
                 <NavLink to='/profile' className={linkClass}>
                   Profile 
+                </NavLink>
+                )}
+                {isAuthenticated && (
+                <NavLink to='/inbox' className={linkClass}>
+                  Inbox
                 </NavLink>
                 )}
               </div>

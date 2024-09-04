@@ -41,9 +41,11 @@ export function configureAuth(app) {
 
       if (!user) {
         // If the user does not exist, create a new user
+        const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
         user = await User.create({
           googleId: profile.id,
           displayName: profile.displayName,
+          email: email,
           emails: profile.emails,
           photos: profile.photos,
         });
@@ -83,7 +85,11 @@ export function configureAuth(app) {
   );
 
   app.get('/logout', (req, res) => {
-    req.logout(() => {
+    req.logout((err) => {
+      if (err) {
+        console.error('Error during logout:', err);
+        return res.status(500).json({ error: 'Failed to logout' });
+      }
       res.redirect('/');
     });
   });

@@ -2,7 +2,9 @@ import React from 'react'
 
 const Logout = () => {
     const handleLogout = () => {
-      window.location.href = '/api/logout';
+      if (window.confirm('Are you sure you want to log out?')) {
+        window.location.href = '/api/logout';
+      }
     };
   
     return (

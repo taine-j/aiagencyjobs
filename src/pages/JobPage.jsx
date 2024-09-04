@@ -1,36 +1,88 @@
-import { useParams, useLoaderData, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { FaArrowLeft, FaMapMarker } from 'react-icons/fa';
-import { Link } from 'react-router-dom';
+import Spinner from '../components/Spinner';
 import { toast } from 'react-toastify';
 
-const JobPage = ({ deleteJob }) => {
-  const navigate = useNavigate();
-  const { id } = useParams();
-  const job = useLoaderData();
+export const jobLoader = async ({ params }) => {
+  const res = await fetch(`/api/jobs/${params.id}`, {
+    credentials: 'include'
+  });
+  if (!res.ok) {
+    const errorData = await res.json();
+    throw new Error(`Failed to fetch job: ${errorData.error || res.statusText}`);
+  }
+  const data = await res.json();
+  return data;
+};
 
-  const onDeleteClick = (jobId) => {
+const JobPage = ({ deleteJob }) => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [job, setJob] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isOwner, setIsOwner] = useState(false);
+
+  const fromProfile = location.state?.from === 'profile';
+
+  useEffect(() => {
+    const fetchJobAndUser = async () => {
+      try {
+        const jobData = await jobLoader({ params: { id } });
+        const userRes = await fetch('/api/current_user', { credentials: 'include' });
+        const userData = await userRes.json();
+        
+        setJob(jobData);
+        const isOwnerValue = userData && 
+          jobData && 
+          jobData.postedBy && 
+          userData.id === jobData.postedBy._id;
+        
+        setIsOwner(isOwnerValue);
+      } catch (error) {
+        console.error('Error fetching job or user:', error);
+        setError(error.message || 'Failed to load job. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchJobAndUser();
+  }, [id]);
+
+  const onDeleteClick = async () => {
     const confirm = window.confirm(
       'Are you sure you want to delete this listing?'
     );
 
     if (!confirm) return;
 
-    deleteJob(jobId);
-
-    toast.success('Job deleted successfully');
-
-    navigate('/jobs');
+    try {
+      await deleteJob(id);
+      toast.success('Job deleted successfully');
+      navigate('/jobs');
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      toast.error('Failed to delete job');
+    }
   };
+
+  if (loading) return <Spinner loading={loading} />;
+  if (error) return <div className="text-center text-red-500">{error}</div>;
+  if (!job) return <div className="text-center">Job not found</div>;
 
   return (
     <>
       <section>
         <div className='container m-auto py-6 px-6'>
           <Link
-            to='/jobs'
+            to={fromProfile ? '/profile' : '/jobs'}
             className='text-indigo-500 hover:text-indigo-600 flex items-center'
           >
-            <FaArrowLeft className='mr-2' /> Back to Job Listings
+            <FaArrowLeft className='mr-2' /> 
+            {fromProfile ? 'Back to Profile' : 'Back to Job Listings'}
           </Link>
         </div>
       </section>
@@ -56,53 +108,56 @@ const JobPage = ({ deleteJob }) => {
                 <p className='mb-4'>{job.description}</p>
 
                 <h3 className='text-indigo-800 text-lg font-bold mb-2'>
-                  Salary
+                  Price
                 </h3>
 
-                <p className='mb-4'>{job.salary} / Year</p>
+                <p className='mb-4'>{job.price}</p>
               </div>
             </main>
 
-            {/* <!-- Sidebar --> */}
             <aside>
               <div className='bg-white p-6 rounded-lg shadow-md'>
-                <h3 className='text-xl font-bold mb-6'>Company Info</h3>
-
-                <h2 className='text-2xl'>{job.company.name}</h2>
-
-                <p className='my-2'>{job.company.description}</p>
-
-                <hr className='my-4' />
-
-                <h3 className='text-xl'>Contact Email:</h3>
-
-                <p className='my-2 bg-indigo-100 p-2 font-bold'>
+                <h3 className='text-xl font-bold mb-6'>Company Details</h3>
+                <h2 className='text-2xl mb-4'>{job.company.name}</h2>
+                <p className='mb-4'>{job.company.description}</p>
+                <a
+                  href={`mailto:${job.company.contactEmail}`}
+                  className='text-indigo-500 hover:text-indigo-600 block mb-4'
+                >
                   {job.company.contactEmail}
-                </p>
-
-                <h3 className='text-xl'>Contact Phone:</h3>
-
-                <p className='my-2 bg-indigo-100 p-2 font-bold'>
-                  {' '}
-                  {job.company.contactPhone}
-                </p>
+                </a>
+                {job.company.contactPhone && (
+                  <p className='mb-4'>{job.company.contactPhone}</p>
+                )}
               </div>
 
-              <div className='bg-white p-6 rounded-lg shadow-md mt-6'>
-                <h3 className='text-xl font-bold mb-6'>Manage Job</h3>
-                <Link
-                  to={`/edit-job/${job.id}`}
-                  className='bg-indigo-500 hover:bg-indigo-600 text-white text-center font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline mt-4 block'
-                >
-                  Edit Job
-                </Link>
-                <button
-                  onClick={() => onDeleteClick(job.id)}
-                  className='bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline mt-4 block'
-                >
-                  Delete Job
-                </button>
-              </div>
+                {isOwner && (
+                <div className="mt-4">
+                  <Link
+                    to={`/edit-job/${job._id}`}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2"
+                  >
+                    Edit Job
+                  </Link>
+                  <button
+                    onClick={onDeleteClick}
+                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Delete Job
+                  </button>
+                </div>
+              )}
+
+              {!isOwner && (
+                <div className="mt-4">
+                  <Link
+                    to={`/apply/${job._id}`}
+                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                  >
+                    Apply for Job
+                  </Link>
+                </div>
+              )}
             </aside>
           </div>
         </div>
@@ -111,10 +166,4 @@ const JobPage = ({ deleteJob }) => {
   );
 };
 
-const jobLoader = async ({ params }) => {
-  const res = await fetch(`/api/jobs/${params.id}`);
-  const data = await res.json();
-  return data;
-};
-
-export { JobPage as default, jobLoader };
+export default JobPage;

@@ -28,7 +28,7 @@ const JobListing = ({ job }) => {
           {showFullDescription ? 'Less' : 'More'}
         </button>
 
-        <h3 className='text-blue-500 mb-2'>{job.salary} / Year</h3>
+        <h3 className='text-blue-500 mb-2'>{job.price}</h3>
 
         <div className='border border-gray-100 mb-5'></div>
 
@@ -38,8 +38,9 @@ const JobListing = ({ job }) => {
             {job.location}
           </div>
           <Link
-            to={`/jobs/${job.id}`}
+            to={`/jobs/${job._id}`}
             className='h-[36px] bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-center text-sm'
+            onClick={() => console.log('Job ID:', job._id)}
           >
             Read More
           </Link>
