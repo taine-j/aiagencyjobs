@@ -20,8 +20,16 @@ const ApplicationForm = ({ jobId }) => {
     formData.append('message', message);
     formData.append('skills', skills);
     formData.append('projectLinks', projectLinks);
-    if (cv) formData.append('cv', cv);
-    if (supportingDocs) formData.append('supportingDocs', supportingDocs);
+    if (cv) {
+      console.log('Appending CV:', cv.name, cv.type, cv.size);
+      formData.append('cv', cv);
+    }
+    if (supportingDocs) {
+      console.log('Appending supporting docs:', supportingDocs.name, supportingDocs.type, supportingDocs.size);
+      formData.append('supportingDocs', supportingDocs);
+    }
+
+    console.log('Form data:', Array.from(formData.entries()));
 
     try {
       const response = await axios.post('/api/job-applications', formData, {
@@ -39,7 +47,22 @@ const ApplicationForm = ({ jobId }) => {
       }
     } catch (error) {
       console.error('Error submitting application:', error);
-      toast.error(error.response?.data?.error || 'An error occurred while submitting your application');
+      console.error('Error submitting application:', error);
+      console.log('Response data:', error.response?.data);
+      console.log('Response status:', error.response?.status);
+      console.log('Response headers:', error.response?.headers);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+        console.error('Response headers:', error.response.headers);
+        toast.error(error.response.data.error || 'An error occurred while submitting your application');
+      } else if (error.request) {
+        console.error('No response received:', error.request);
+        toast.error('No response received from the server');
+      } else {
+        console.error('Error setting up request:', error.message);
+        toast.error('An error occurred while setting up the request');
+      }
     }
   };
 
@@ -104,7 +127,15 @@ const ApplicationForm = ({ jobId }) => {
             id="cv"
             name="cv"
             className="border rounded w-full py-2 px-3"
-            onChange={(e) => setCv(e.target.files[0])}
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file && file.type === 'application/pdf') {
+                setCv(file);
+              } else {
+                toast.error('Please upload a PDF file for your CV');
+              }
+            }}
+            accept=".pdf"
           />
         </div>
 

@@ -10,11 +10,13 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Job from '../models/Job.js';
 import JobApplication from '../models/JobApplication.js';
+import { S3Client, ListBucketsCommand, PutObjectCommand } from '@aws-sdk/client-s3';
 import multer from 'multer';
+import multerS3 from 'multer-s3';
 
 dotenv.config();
 
-mongoose.connect(process.env.MONGODB_URI, {
+mongoose.connect(process.env.MONGODB_URI, { 
     serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
   }).then(() => {
     console.log('Connected to MongoDB');
@@ -80,34 +82,150 @@ app.get('/jobs/:id', async (req, res) => {
   }
 });
 
-// Set up multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
+// Configure AWS
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
   },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
+});
+
+// Configure multer for S3 uploads
+const upload = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: process.env.S3_BUCKET_NAME,
+    acl: 'private',
+    key: function (req, file, cb) {
+      console.log('Attempting to upload file:', file);
+      const fileName = `${Date.now().toString()}-${file.originalname}`;
+      console.log('Generated file name:', fileName);
+      console.log('S3 bucket:', process.env.S3_BUCKET_NAME);
+      cb(null, fileName);
+    },
+    metadata: function (req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+    shouldTransform: function (req, file, cb) {
+      cb(null, /^image/i.test(file.mimetype));
+    },
+    transforms: [
+      {
+        id: 'original',
+        key: function (req, file, cb) {
+          cb(null, `original-${file.originalname}`);
+        },
+        transform: function (req, file, cb) {
+          cb(null, sharp().resize(800, 600, { fit: 'inside' }));
+        },
+      },
+    ],
+  }),
+  fileFilter: (req, file, cb) => {
+    console.log('File filter - File type:', file.mimetype);
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type, only PDF is allowed!'), false);
+    }
+  },
+  limits: {
+    fileSize: 5 * 1024 * 1024 // 5MB file size limit
   }
 });
 
-const upload = multer({ storage: storage });
+console.log('Multer configuration:', JSON.stringify(upload, null, 2));
 
-app.post('/jobs', async (req, res) => {
+// Update your /job-applications route to use upload middleware directly
+app.post('/job-applications', upload.fields([
+  { name: 'cv', maxCount: 1 },
+  { name: 'supportingDocs', maxCount: 1 }
+]), async (req, res) => {
+  console.log('Received job application request');
+  console.log('Request body:', req.body);
+  console.log('Request files:', JSON.stringify(req.files, null, 2));
+  
   if (!req.user) {
+    console.log('Unauthorized access attempt');
     return res.status(401).json({ error: 'Unauthorized' });
   }
-
-  const newJob = new Job({
-    ...req.body,
-    postedBy: req.user._id
-  });
-
   try {
-    const savedJob = await newJob.save();
-    res.status(201).json(savedJob);
+    console.log('Received application data:', req.body);
+    console.log('Received files:', JSON.stringify(req.files, null, 2));
+
+    const { job, message, skills, projectLinks } = req.body;
+    
+    if (!job || !skills) {
+      console.log('Missing required fields');
+      return res.status(400).json({ error: 'Job and skills are required fields' });
+    }
+
+    let cvPath = null;
+    let supportingDocsPath = null;
+
+    if (req.files['cv']) {
+      const cvFile = req.files['cv'][0];
+      console.log('CV file:', JSON.stringify(cvFile, null, 2));
+      
+      // Manual upload to S3 if multer-s3 failed
+      if (!cvFile.location) {
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: `${Date.now().toString()}-${cvFile.originalname}`,
+          Body: cvFile.buffer,
+          ContentType: cvFile.mimetype,
+          ACL: 'private'
+        };
+        const command = new PutObjectCommand(uploadParams);
+        const uploadResult = await s3Client.send(command);
+        cvPath = uploadResult.Location;
+      } else {
+        cvPath = cvFile.location;
+      }
+    }
+
+    if (req.files['supportingDocs']) {
+      const supportingDocsFile = req.files['supportingDocs'][0];
+      console.log('Supporting docs file:', JSON.stringify(supportingDocsFile, null, 2));
+      
+      // Manual upload to S3 if multer-s3 failed
+      if (!supportingDocsFile.location) {
+        const uploadParams = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: `${Date.now().toString()}-${supportingDocsFile.originalname}`,
+          Body: supportingDocsFile.buffer,
+          ContentType: supportingDocsFile.mimetype,
+          ACL: 'private'
+        };
+        const command = new PutObjectCommand(uploadParams);
+        const uploadResult = await s3Client.send(command);
+        supportingDocsPath = uploadResult.Location;
+      } else {
+        supportingDocsPath = supportingDocsFile.location;
+      }
+    }
+
+    const newApplication = new JobApplication({
+      job,
+      applicant: req.user._id,
+      message,
+      skills,
+      projectLinks,
+      cvPath,
+      supportingDocsPath,
+    });
+
+    console.log('New application object:', JSON.stringify(newApplication, null, 2));
+
+    await newApplication.save();
+    console.log('Application saved successfully');
+    res.status(201).json({ message: 'Application submitted successfully' });
   } catch (error) {
-    console.error('Error saving job:', error);
-    res.status(500).json({ error: 'Unable to save job' });
+    console.error('Error submitting application:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Unable to submit application', details: error.message, stack: error.stack });
   }
 });
 
@@ -214,42 +332,32 @@ app.get('/user_jobs', async (req, res) => {
   }
 });
 
-// Submit a job application
-app.post('/api/job-applications', upload.fields([
-  { name: 'cv', maxCount: 1 },
-  { name: 'supportingDocs', maxCount: 1 }
-]), async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  try {
-    const newApplication = new JobApplication({
-      job: req.body.job,
-      applicant: req.user._id,
-      message: req.body.message,
-      skills: req.body.skills,
-      projectLinks: req.body.projectLinks,
-      cvPath: req.files['cv'] ? req.files['cv'][0].path : null,
-      supportingDocsPath: req.files['supportingDocs'] ? req.files['supportingDocs'][0].path : null,
-    });
-    await newApplication.save();
-    res.status(201).json(newApplication);
-  } catch (error) {
-    console.error('Error submitting application:', error);
-    res.status(500).json({ error: 'Unable to submit application', details: error.message });
-  }
-});
-
 // Get job applications for the current user
 app.get('/job-applications', async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
+  
   try {
-    const applications = await JobApplication.find({ applicant: req.user._id })
+    console.log('Fetching applications for user:', req.user._id);
+
+    const sentApplications = await JobApplication.find({ applicant: req.user._id })
       .populate('job')
       .sort({ createdAt: -1 });
-    res.json(applications);
+
+    const postedJobs = await Job.find({ postedBy: req.user._id });
+    const receivedApplications = await JobApplication.find({ job: { $in: postedJobs.map(job => job._id) } })
+      .populate('job')
+      .populate('applicant', 'displayName email')
+      .sort({ createdAt: -1 });
+
+    console.log('Sent applications:', JSON.stringify(sentApplications));
+    console.log('Received applications:', JSON.stringify(receivedApplications));
+
+    const response = { sent: sentApplications, received: receivedApplications };
+    console.log('Sending response:', JSON.stringify(response));
+
+    res.json(response);
   } catch (error) {
     console.error('Error fetching applications:', error);
     res.status(500).json({ error: 'Unable to fetch applications', details: error.message });
@@ -267,11 +375,29 @@ app.get('/current_user', (req, res) => {
         googleId: req.user.googleId,
       });
     } else {
-        res.status(401).json({ error: 'Not authenticated' });
+      res.status(401).json({ error: 'Not authenticated' });
     }
   } catch (error) {
     console.error('Error in /current_user:', error);
     res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+});
+
+// Add this near the top of your server.js file, after imports
+const requireLogin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'You must be logged in to do this' });
+  }
+  next();
+};
+
+app.get('/user-applications', requireLogin, async (req, res) => {
+  try {
+    const applications = await JobApplication.find({ applicant: req.user._id }).select('job');
+    res.json(applications);
+  } catch (error) {
+    console.error('Error fetching user applications:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
@@ -283,4 +409,15 @@ app.get('*', (req, res) => {
 // Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
+});
+
+app.get('/test-s3', async (req, res) => {
+  try {
+    const command = new ListBucketsCommand({});
+    const { Buckets } = await s3Client.send(command);
+    res.json({ message: 'S3 connection successful', buckets: Buckets.map(b => b.Name) });
+  } catch (error) {
+    console.error('S3 test error:', error);
+    res.status(500).json({ error: 'S3 test failed', details: error.message, stack: error.stack });
+  }
 });

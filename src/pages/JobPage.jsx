@@ -24,15 +24,20 @@ const JobPage = ({ deleteJob }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [hasApplied, setHasApplied] = useState(false);
 
   const fromProfile = location.state?.from === 'profile';
+  const fromInbox = location.state?.from === 'inbox';
 
   useEffect(() => {
-    const fetchJobAndUser = async () => {
+    const fetchJobAndUserData = async () => {
       try {
         const jobData = await jobLoader({ params: { id } });
         const userRes = await fetch('/api/current_user', { credentials: 'include' });
         const userData = await userRes.json();
+        
+        const applicationsRes = await fetch('/api/user-applications', { credentials: 'include' });
+        const applicationsData = await applicationsRes.json();
         
         setJob(jobData);
         const isOwnerValue = userData && 
@@ -41,15 +46,18 @@ const JobPage = ({ deleteJob }) => {
           userData.id === jobData.postedBy._id;
         
         setIsOwner(isOwnerValue);
+        
+        const hasAppliedValue = applicationsData.some(app => app.job === id);
+        setHasApplied(hasAppliedValue);
       } catch (error) {
-        console.error('Error fetching job or user:', error);
+        console.error('Error fetching job or user data:', error);
         setError(error.message || 'Failed to load job. Please try again later.');
       } finally {
         setLoading(false);
       }
     };
   
-    fetchJobAndUser();
+    fetchJobAndUserData();
   }, [id]);
 
   const onDeleteClick = async () => {
@@ -78,11 +86,11 @@ const JobPage = ({ deleteJob }) => {
       <section>
         <div className='container m-auto py-6 px-6'>
           <Link
-            to={fromProfile ? '/profile' : '/jobs'}
+            to={fromProfile ? '/profile' : fromInbox ? '/inbox' : '/jobs'}
             className='text-indigo-500 hover:text-indigo-600 flex items-center'
           >
             <FaArrowLeft className='mr-2' /> 
-            {fromProfile ? 'Back to Profile' : 'Back to Job Listings'}
+            {fromProfile ? 'Back to Profile' : fromInbox ? 'Back to Inbox' : 'Back to Job Listings'}
           </Link>
         </div>
       </section>
@@ -132,16 +140,16 @@ const JobPage = ({ deleteJob }) => {
               </div>
 
                 {isOwner && (
-                <div className="mt-4">
+                <div className="mt-4 flex gap-2">
                   <Link
                     to={`/edit-job/${job._id}`}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-2"
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded flex-1 text-center"
                   >
                     Edit Job
                   </Link>
                   <button
                     onClick={onDeleteClick}
-                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex-1"
                   >
                     Delete Job
                   </button>
@@ -152,9 +160,16 @@ const JobPage = ({ deleteJob }) => {
                 <div className="mt-4">
                   <Link
                     to={`/apply/${job._id}`}
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded"
+                    className={`bg-green-500 text-white font-bold py-2 px-4 rounded ${
+                      hasApplied ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'
+                    }`}
+                    onClick={(e) => {
+                      if (hasApplied) {
+                        e.preventDefault();
+                      }
+                    }}
                   >
-                    Apply for Job
+                    {hasApplied ? 'Already Applied' : 'Apply for Job'}
                   </Link>
                 </div>
               )}
