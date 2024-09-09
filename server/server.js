@@ -10,9 +10,17 @@ import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Job from '../models/Job.js';
 import JobApplication from '../models/JobApplication.js';
-import { S3Client, ListBucketsCommand, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, ListBucketsCommand, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
+
+const requireLogin = (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'You must be logged in to do this' });
+  }
+  next();
+};
 
 dotenv.config();
 
@@ -229,6 +237,32 @@ app.post('/job-applications', upload.fields([
   }
 });
 
+app.get('/applications/:id', requireLogin, async (req, res) => {
+  try {
+    const application = await JobApplication.findById(req.params.id)
+      .populate('job', 'title postedBy')
+      .populate('applicant', 'displayName');
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Check if the current user is either the applicant or the job poster
+    const isApplicant = application.applicant._id.toString() === req.user.id;
+    const isJobPoster = application.job && application.job.postedBy && 
+                        application.job.postedBy.toString() === req.user.id;
+
+    if (!isApplicant && !isJobPoster) {
+      return res.status(403).json({ error: 'Not authorized to view this application' });
+    }
+
+    res.json(application);
+  } catch (error) {
+    console.error('Error fetching application:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Route to delete a job by ID
 app.delete('/jobs/:id', async (req, res) => {
   if (!req.user) {
@@ -383,14 +417,6 @@ app.get('/current_user', (req, res) => {
   }
 });
 
-// Add this near the top of your server.js file, after imports
-const requireLogin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'You must be logged in to do this' });
-  }
-  next();
-};
-
 app.get('/user-applications', requireLogin, async (req, res) => {
   try {
     const applications = await JobApplication.find({ applicant: req.user._id }).select('job');
@@ -398,6 +424,82 @@ app.get('/user-applications', requireLogin, async (req, res) => {
   } catch (error) {
     console.error('Error fetching user applications:', error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+app.get('/document/:type/:filename', requireLogin, async (req, res) => {
+  const { type, filename } = req.params;
+  const key = `${type}/${filename}`;
+
+  console.log('Attempting to generate signed URL for:', key);
+  console.log('Full S3 path:', `${process.env.S3_BUCKET_NAME}/${key}`);
+
+  try {
+    const command = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key,
+    });
+
+    console.log('GetObjectCommand created with:', {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key
+    });
+
+    const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    console.log('Signed URL generated successfully');
+
+    res.json({ url });
+  } catch (error) {
+    console.error('Error generating signed URL:', error);
+    res.status(500).json({ error: 'Failed to generate document URL', details: error.message, stack: error.stack });
+  }
+});
+
+// Add this route after your other application-related routes
+
+app.get('/applications/:id/cv-url', requireLogin, async (req, res) => {
+  try {
+    const application = await JobApplication.findById(req.params.id);
+    
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Check if the current user is either the applicant or the job poster
+    const job = await Job.findById(application.job);
+    const isApplicant = application.applicant.toString() === req.user._id.toString();
+    const isJobPoster = job.postedBy.toString() === req.user._id.toString();
+
+    if (!isApplicant && !isJobPoster) {
+      return res.status(403).json({ error: 'You are not authorized to access this CV' });
+    }
+
+    if (!application.cv) {
+      return res.status(404).json({ error: 'No CV found for this application' });
+    }
+
+    const key = `cv/${application.cv}`;
+
+    console.log('Attempting to generate signed URL for:', key);
+    console.log('Full S3 path:', `${process.env.S3_BUCKET_NAME}/${key}`);
+
+    const command = new GetObjectCommand({
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key,
+    });
+
+    console.log('GetObjectCommand created with:', {
+      Bucket: process.env.S3_BUCKET_NAME,
+      Key: key
+    });
+
+    const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
+    console.log('Signed URL generated successfully');
+
+    res.json({ url });
+  } catch (error) {
+    console.error('Error generating CV signed URL:', error);
+    res.status(500).json({ error: 'Failed to generate CV URL', details: error.message, stack: error.stack });
   }
 });
 
@@ -421,3 +523,4 @@ app.get('/test-s3', async (req, res) => {
     res.status(500).json({ error: 'S3 test failed', details: error.message, stack: error.stack });
   }
 });
+

@@ -19,6 +19,7 @@ import LogoutPage from './pages/LogoutPage';
 import ProfilePage from './pages/ProfilePage';
 import JobApplicationPage from './pages/JobApplicationPage';
 import InboxPage from './pages/InboxPage';
+import ApplicationDetailsPage from './pages/ApplicationDetailsPage';
 
 
   const App = () => {
@@ -124,6 +125,10 @@ import InboxPage from './pages/InboxPage';
         <Route
           path='/apply/:id'
           element={<JobApplicationPage />}
+        />
+        <Route
+          path='/application/:id'
+          element={<ApplicationDetailsPage />}
         />
       </Route>
     )

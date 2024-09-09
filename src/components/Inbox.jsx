@@ -2,30 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Spinner from './Spinner';
-
-const ApplicationList = ({ applications = [], type }) => (
-  <div className="space-y-4">
-    {applications.map((application) => (
-      <div key={application._id} className="bg-white p-6 rounded-lg shadow-md">
-        <h3 className="text-xl font-semibold mb-2 text-indigo-600">{application.job?.title || 'Untitled Job'}</h3>
-        <p className="text-gray-600 mb-2">Status: <span className="font-semibold">{application.status}</span></p>
-        <p className="text-gray-500 mb-2">Applied on: {new Date(application.createdAt).toLocaleDateString()}</p>
-        {type === 'received' && (
-          <p className="text-gray-600 mb-2">Applicant: <span className="font-semibold">{application.applicant?.displayName || 'Unknown'}</span></p>
-        )}
-        {application.job && (
-          <Link
-            to={`/jobs/${application.job._id}`}
-            state={{ from: 'inbox' }}
-            className="inline-block mt-2 bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
-          >
-            View Job Details
-          </Link>
-        )}
-      </div>
-    ))}
-  </div>
-);
+import ApplicationList from './ApplicationList';
 
 const Inbox = () => {
   const [applications, setApplications] = useState({ sent: [], received: [] });
@@ -33,6 +10,7 @@ const Inbox = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    
     const fetchApplications = async () => {
       try {
         const response = await axios.get('/api/job-applications', { withCredentials: true });
