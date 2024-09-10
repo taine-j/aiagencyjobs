@@ -54,42 +54,6 @@ app.use(cors({
 // Configure authentication
 configureAuth(app);
 
-// JOBS
-// Route to get all jobs with optional limit
-app.get('/jobs', async (req, res) => {
-    const limit = parseInt(req.query._limit, 10);
-  
-    try {
-      let query = Job.find().sort({ createdAt: -1 });
-      if (limit) {
-        query = query.limit(limit);
-      }
-      const jobs = await query.exec();
-      res.json(jobs);
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-      res.status(500).json({ error: 'Unable to fetch jobs' });
-    }
-  });
-
-// Route to get a job by ID
-app.get('/jobs/:id', async (req, res) => {
-  const jobId = req.params.id;
-
-  try {
-    const job = await Job.findById(jobId).populate('postedBy', '_id email googleId');
-    if (!job) {
-      console.log(`Job with id ${jobId} not found`);
-      return res.status(404).json({ error: `Job with id ${jobId} not found` });
-    }
-    console.log('Job fetched:', JSON.stringify(job, null, 2));
-    res.json(job);
-  } catch (error) {
-    console.error('Error fetching job:', error);
-    res.status(500).json({ error: 'Unable to fetch job', details: error.message });
-  }
-});
-
 // Configure AWS
 const s3Client = new S3Client({
   region: process.env.AWS_REGION,
@@ -146,6 +110,58 @@ const upload = multer({
 
 console.log('Multer configuration:', JSON.stringify(upload, null, 2));
 
+// JOBS
+// Route to get all jobs with optional limit
+app.get('/jobs', async (req, res) => {
+    const limit = parseInt(req.query._limit, 10);
+  
+    try {
+      let query = Job.find().sort({ createdAt: -1 });
+      if (limit) {
+        query = query.limit(limit);
+      }
+      const jobs = await query.exec();
+      res.json(jobs);
+    } catch (error) {
+      console.error('Error fetching jobs:', error);
+      res.status(500).json({ error: 'Unable to fetch jobs' });
+    }
+  });
+
+  app.post('/jobs', requireLogin, async (req, res) => {
+    try {
+      const jobData = req.body;
+      jobData.postedBy = req.user._id; // Assuming you want to associate the job with the current user
+  
+      const newJob = new Job(jobData);
+      await newJob.save();
+  
+      res.status(201).json(newJob);
+    } catch (error) {
+      console.error('Error adding new job:', error);
+      res.status(500).json({ error: 'Unable to add job', details: error.message });
+    }
+  });
+
+// Route to get a job by ID
+app.get('/jobs/:id', async (req, res) => {
+  const jobId = req.params.id;
+
+  try {
+    const job = await Job.findById(jobId).populate('postedBy', '_id email googleId');
+    if (!job) {
+      console.log(`Job with id ${jobId} not found`);
+      return res.status(404).json({ error: `Job with id ${jobId} not found` });
+    }
+    console.log('Job fetched:', JSON.stringify(job, null, 2));
+    res.json(job);
+  } catch (error) {
+    console.error('Error fetching job:', error);
+    res.status(500).json({ error: 'Unable to fetch job', details: error.message });
+  }
+});
+
+
 // Update your /job-applications route to use upload middleware directly
 app.post('/job-applications', upload.fields([
   { name: 'cv', maxCount: 1 },
@@ -163,11 +179,11 @@ app.post('/job-applications', upload.fields([
     console.log('Received application data:', req.body);
     console.log('Received files:', JSON.stringify(req.files, null, 2));
 
-    const { job, message, skills, projectLinks } = req.body;
+    const { job, message, skills, projectLinks, phone, email } = req.body;
     
-    if (!job || !skills) {
+    if (!job || !skills || !email) {
       console.log('Missing required fields');
-      return res.status(400).json({ error: 'Job and skills are required fields' });
+      return res.status(400).json({ error: 'Job, skills, and email are required fields' });
     }
 
     let cvPath = null;
@@ -177,20 +193,20 @@ app.post('/job-applications', upload.fields([
       const cvFile = req.files['cv'][0];
       console.log('CV file:', JSON.stringify(cvFile, null, 2));
       
+      // Store the full key without the 'cv/' prefix
+      cvPath = cvFile.key || `${Date.now().toString()}-${cvFile.originalname}`;
+      
       // Manual upload to S3 if multer-s3 failed
       if (!cvFile.location) {
         const uploadParams = {
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `${Date.now().toString()}-${cvFile.originalname}`,
+          Key: cvPath,
           Body: cvFile.buffer,
           ContentType: cvFile.mimetype,
           ACL: 'private'
         };
         const command = new PutObjectCommand(uploadParams);
-        const uploadResult = await s3Client.send(command);
-        cvPath = uploadResult.Location;
-      } else {
-        cvPath = cvFile.location;
+        await s3Client.send(command);
       }
     }
 
@@ -198,20 +214,20 @@ app.post('/job-applications', upload.fields([
       const supportingDocsFile = req.files['supportingDocs'][0];
       console.log('Supporting docs file:', JSON.stringify(supportingDocsFile, null, 2));
       
+      // Store only the object key
+      supportingDocsPath = `${Date.now().toString()}-${supportingDocsFile.originalname}`;
+      
       // Manual upload to S3 if multer-s3 failed
       if (!supportingDocsFile.location) {
         const uploadParams = {
           Bucket: process.env.S3_BUCKET_NAME,
-          Key: `${Date.now().toString()}-${supportingDocsFile.originalname}`,
+          Key: supportingDocsPath,
           Body: supportingDocsFile.buffer,
           ContentType: supportingDocsFile.mimetype,
           ACL: 'private'
         };
         const command = new PutObjectCommand(uploadParams);
-        const uploadResult = await s3Client.send(command);
-        supportingDocsPath = uploadResult.Location;
-      } else {
-        supportingDocsPath = supportingDocsFile.location;
+        await s3Client.send(command);
       }
     }
 
@@ -223,9 +239,12 @@ app.post('/job-applications', upload.fields([
       projectLinks,
       cvPath,
       supportingDocsPath,
+      phone,
+      email,
     });
 
     console.log('New application object:', JSON.stringify(newApplication, null, 2));
+    console.log('Saved application with cvPath:', newApplication.cvPath);
 
     await newApplication.save();
     console.log('Application saved successfully');
@@ -242,6 +261,9 @@ app.get('/applications/:id', requireLogin, async (req, res) => {
     const application = await JobApplication.findById(req.params.id)
       .populate('job', 'title postedBy')
       .populate('applicant', 'displayName');
+
+      console.log('Application:', application);
+      console.log('Retrieved application with cvPath:', application.cvPath);
     
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
@@ -268,7 +290,7 @@ app.delete('/jobs/:id', async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  1
+  
   const jobId = req.params.id;
 
   try {
@@ -455,51 +477,54 @@ app.get('/document/:type/:filename', requireLogin, async (req, res) => {
   }
 });
 
-// Add this route after your other application-related routes
-
-app.get('/applications/:id/cv-url', requireLogin, async (req, res) => {
+// Update the existing route or add a new one for both CV and supporting docs
+app.get('/applications/:id/:docType-url', requireLogin, async (req, res) => {
   try {
-    const application = await JobApplication.findById(req.params.id);
+    const { id, docType } = req.params;
+    console.log(`Fetching ${docType} URL for application:`, id);
+    const application = await JobApplication.findById(id);
     
     if (!application) {
+      console.log('Application not found');
       return res.status(404).json({ error: 'Application not found' });
     }
 
-    // Check if the current user is either the applicant or the job poster
-    const job = await Job.findById(application.job);
-    const isApplicant = application.applicant.toString() === req.user._id.toString();
-    const isJobPoster = job.postedBy.toString() === req.user._id.toString();
+    console.log('Application found:', application);
 
-    if (!isApplicant && !isJobPoster) {
-      return res.status(403).json({ error: 'You are not authorized to access this CV' });
+    const docPath = docType === 'cv' ? application.cvPath : application.supportingDocsPath;
+
+    if (!docPath) {
+      console.log(`No ${docType} path found`);
+      return res.status(404).json({ error: `No ${docType} found for this application` });
     }
 
-    if (!application.cv) {
-      return res.status(404).json({ error: 'No CV found for this application' });
-    }
-
-    const key = `cv/${application.cv}`;
-
-    console.log('Attempting to generate signed URL for:', key);
-    console.log('Full S3 path:', `${process.env.S3_BUCKET_NAME}/${key}`);
+    console.log(`${docType} path (object key):`, docPath);
+    
+    // Use the docPath directly as the S3 key
+    const s3Key = docPath;
+    
+    console.log('S3 Key:', s3Key);
 
     const command = new GetObjectCommand({
       Bucket: process.env.S3_BUCKET_NAME,
-      Key: key,
+      Key: s3Key,
     });
 
-    console.log('GetObjectCommand created with:', {
-      Bucket: process.env.S3_BUCKET_NAME,
-      Key: key
-    });
+    console.log('GetObjectCommand created');
 
     const url = await getSignedUrl(s3Client, command, { expiresIn: 3600 });
-    console.log('Signed URL generated successfully');
+
+    console.log('Signed URL generated:', url);
+
+    if (!url) {
+      console.error('Failed to generate signed URL');
+      return res.status(500).json({ error: 'Failed to generate signed URL' });
+    }
 
     res.json({ url });
   } catch (error) {
-    console.error('Error generating CV signed URL:', error);
-    res.status(500).json({ error: 'Failed to generate CV URL', details: error.message, stack: error.stack });
+    console.error(`Error generating ${req.params.docType} signed URL:`, error);
+    res.status(500).json({ error: `Failed to generate ${req.params.docType} URL`, details: error.message });
   }
 });
 

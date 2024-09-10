@@ -8,9 +8,21 @@ const ApplicationForm = ({ jobId }) => {
   const [skills, setSkills] = useState('');
   const [projectLinks, setProjectLinks] = useState('');
   const [cv, setCv] = useState(null);
-  const [supportingDocs, setSupportingDocs] = useState(null);
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
 
   const navigate = useNavigate();
+
+  // Function to remove whitespaces from file name
+  const sanitizeFileName = (fileName) => {
+    return fileName.replace(/\s+/g, '_');
+  };
+
+  // Function to create a new file with sanitized name
+  const createFileWithSanitizedName = (file) => {
+    const sanitizedName = sanitizeFileName(file.name);
+    return new File([file], sanitizedName, { type: file.type });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -20,13 +32,13 @@ const ApplicationForm = ({ jobId }) => {
     formData.append('message', message);
     formData.append('skills', skills);
     formData.append('projectLinks', projectLinks);
+    formData.append('phone', phone);
+    formData.append('email', email);
+    
     if (cv) {
-      console.log('Appending CV:', cv.name, cv.type, cv.size);
-      formData.append('cv', cv);
-    }
-    if (supportingDocs) {
-      console.log('Appending supporting docs:', supportingDocs.name, supportingDocs.type, supportingDocs.size);
-      formData.append('supportingDocs', supportingDocs);
+      const sanitizedCv = createFileWithSanitizedName(cv);
+      console.log('Appending CV:', sanitizedCv.name, sanitizedCv.type, sanitizedCv.size);
+      formData.append('cv', sanitizedCv);
     }
 
     console.log('Form data:', Array.from(formData.entries()));
@@ -47,10 +59,6 @@ const ApplicationForm = ({ jobId }) => {
       }
     } catch (error) {
       console.error('Error submitting application:', error);
-      console.error('Error submitting application:', error);
-      console.log('Response data:', error.response?.data);
-      console.log('Response status:', error.response?.status);
-      console.log('Response headers:', error.response?.headers);
       if (error.response) {
         console.error('Response data:', error.response.data);
         console.error('Response status:', error.response.status);
@@ -119,6 +127,37 @@ const ApplicationForm = ({ jobId }) => {
         </div>
 
         <div className='mb-4'>
+          <label htmlFor="phone" className="block text-gray-700 font-bold mb-2">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            name="phone"
+            className="border rounded w-full py-2 px-3"
+            placeholder="Your phone number"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </div>
+
+        <div className='mb-4'>
+          <label htmlFor="email" className="block text-gray-700 font-bold mb-2">
+            Email Address
+          </label>
+          <input
+            type="email"
+            id="email"
+            name="email"
+            className="border rounded w-full py-2 px-3"
+            placeholder="Your email address"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className='mb-4'>
           <label htmlFor="cv" className="block text-gray-700 font-bold mb-2">
             CV
           </label>
@@ -136,19 +175,6 @@ const ApplicationForm = ({ jobId }) => {
               }
             }}
             accept=".pdf"
-          />
-        </div>
-
-        <div className='mb-4'>
-          <label htmlFor="supportingDocs" className="block text-gray-700 font-bold mb-2">
-            Supporting Documents
-          </label>
-          <input
-            type="file"
-            id="supportingDocs"
-            name="supportingDocs"
-            className="border rounded w-full py-2 px-3"
-            onChange={(e) => setSupportingDocs(e.target.files[0])}
           />
         </div>
 

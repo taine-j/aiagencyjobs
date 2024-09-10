@@ -22,10 +22,14 @@ const jobApplicationSchema = new mongoose.Schema({
   projectLinks: String,
   cvPath: String,
   supportingDocsPath: String,
+  phone: String,
+  email: {
+    type: String,
+    required: true
+  },
   status: {
     type: String,
-    enum: ['pending', 'reviewed', 'accepted', 'rejected'],
-    default: 'pending'
+    default: 'Pending'
   },
   createdAt: {
     type: Date,
