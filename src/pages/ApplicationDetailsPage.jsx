@@ -151,17 +151,18 @@ const ApplicationDetailsPage = () => {
               <h3 className="text-xl font-bold mb-6">Additional Information</h3>
               <div className="space-y-4">
                 <p className="text-gray-600 font-semibold">Status: <span className="text-indigo-600">{application.status}</span></p>
+                {application.status === 'Accepted' && (<p className="text-gray-600 font-semibold">We'll notify {application.applicant?.displayName} that you will be in contact with them shortly.</p>)}
                 {application.status === 'Pending' && (
                   <div className="flex space-x-2 mt-4">
                     <button
                       onClick={() => handleStatusUpdate('Accepted')}
-                      className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                      className="inline-block bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg"
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => handleStatusUpdate('Rejected')}
-                      className="inline-block bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                      className="inline-block bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg"
                     >
                       Reject
                     </button>

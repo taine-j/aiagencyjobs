@@ -108,8 +108,6 @@ const upload = multer({
   }
 });
 
-console.log('Multer configuration:', JSON.stringify(upload, null, 2));
-
 // JOBS
 // Route to get all jobs with optional limit
 app.get('/jobs', async (req, res) => {
@@ -159,6 +157,78 @@ app.get('/jobs/:id', async (req, res) => {
     console.error('Error fetching job:', error);
     res.status(500).json({ error: 'Unable to fetch job', details: error.message });
   }
+});
+
+// Route to delete a job by ID
+app.delete('/jobs/:id', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  const jobId = req.params.id;
+
+  try {
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: `Job with id ${jobId} not found` });
+    }
+
+    console.log('Job to delete:', job);
+    console.log('User trying to delete:', req.user);
+
+    if (job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'You are not authorized to delete this job' });
+    }
+
+    await Job.findByIdAndDelete(jobId);
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting job:', error);
+    res.status(500).json({ error: 'Unable to delete job' });
+  }
+});
+
+// Route to update a job by ID
+app.put('/jobs/:id', (req, res) => {
+    const jobId = req.params.id;
+    const updatedJob = req.body;
+
+    fs.readFile(path.join(__dirname, '../data/jobs.json'), 'utf8', (err, data) => {
+        if (err) {
+            console.error('Error reading the file:', err);
+            return res.status(500).json({ error: 'Unable to read data' });
+        }
+
+        try {
+            const parsedData = JSON.parse(data);
+            let jobs = parsedData.jobs;
+
+            if (Array.isArray(jobs)) {
+                const jobIndex = jobs.findIndex(job => job.id === jobId);
+
+                if (jobIndex !== -1) {
+                    jobs[jobIndex] = { ...jobs[jobIndex], ...updatedJob };
+
+                    fs.writeFile(path.join(__dirname, '../data/jobs.json'), JSON.stringify({ jobs }), 'utf8', (err) => {
+                        if (err) {
+                            console.error('Error writing to the file:', err);
+                            return res.status(500).json({ error: 'Unable to update job' });
+                        }
+
+                        res.json(jobs[jobIndex]);
+                    });
+                } else {
+                    res.status(404).json({ error: `Job with id ${jobId} not found` });
+                }
+            } else {
+                console.error('Data is not in expected array format:', jobs);
+                res.status(500).json({ error: 'Data is not in expected array format' });
+            }
+        } catch (parseError) {
+            console.error('Error parsing JSON data:', parseError);
+            res.status(500).json({ error: 'Error parsing JSON data' });
+        }
+    });
 });
 
 
@@ -289,78 +359,6 @@ app.get('/applications/:id', requireLogin, async (req, res) => {
   }
 });
 
-// Route to delete a job by ID
-app.delete('/jobs/:id', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
-  const jobId = req.params.id;
-
-  try {
-    const job = await Job.findById(jobId);
-    if (!job) {
-      return res.status(404).json({ error: `Job with id ${jobId} not found` });
-    }
-
-    console.log('Job to delete:', job);
-    console.log('User trying to delete:', req.user);
-
-    if (job.postedBy.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: 'You are not authorized to delete this job' });
-    }
-
-    await Job.findByIdAndDelete(jobId);
-    res.status(204).send();
-  } catch (error) {
-    console.error('Error deleting job:', error);
-    res.status(500).json({ error: 'Unable to delete job' });
-  }
-});
-
-// Route to update a job by ID
-app.put('/jobs/:id', (req, res) => {
-    const jobId = req.params.id;
-    const updatedJob = req.body;
-
-    fs.readFile(path.join(__dirname, '../data/jobs.json'), 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading the file:', err);
-            return res.status(500).json({ error: 'Unable to read data' });
-        }
-
-        try {
-            const parsedData = JSON.parse(data);
-            let jobs = parsedData.jobs;
-
-            if (Array.isArray(jobs)) {
-                const jobIndex = jobs.findIndex(job => job.id === jobId);
-
-                if (jobIndex !== -1) {
-                    jobs[jobIndex] = { ...jobs[jobIndex], ...updatedJob };
-
-                    fs.writeFile(path.join(__dirname, '../data/jobs.json'), JSON.stringify({ jobs }), 'utf8', (err) => {
-                        if (err) {
-                            console.error('Error writing to the file:', err);
-                            return res.status(500).json({ error: 'Unable to update job' });
-                        }
-
-                        res.json(jobs[jobIndex]);
-                    });
-                } else {
-                    res.status(404).json({ error: `Job with id ${jobId} not found` });
-                }
-            } else {
-                console.error('Data is not in expected array format:', jobs);
-                res.status(500).json({ error: 'Data is not in expected array format' });
-            }
-        } catch (parseError) {
-            console.error('Error parsing JSON data:', parseError);
-            res.status(500).json({ error: 'Error parsing JSON data' });
-        }
-    });
-});
-
 // Route to update user profile
 app.post('/update_profile', async (req, res) => {
     if (!req.user) {
@@ -433,42 +431,6 @@ app.get('/job-applications', requireLogin, async (req, res) => {
   } catch (error) {
     console.error('Error fetching job applications:', error);
     res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Route to check the current user
-app.get('/current_user', async (req, res) => {
-  try {
-    console.log('Current user route triggered');
-    if (req.user) {
-      console.log('User found in request:', req.user);
-      // Fetch the full user document from the database
-      const user = await User.findById(req.user._id);
-      if (!user) {
-        console.log('User not found in database');
-        return res.status(404).json({ error: 'User not found' });
-      }
-
-      console.log('User found in database:', user);
-      console.log('Applied jobs:', user.appliedJobs);
-
-      const responseData = {
-        id: user._id,
-        displayName: user.displayName,
-        email: user.emails[0].value,
-        googleId: user.googleId,
-        appliedJobs: user.appliedJobs || []
-      };
-
-      console.log('Sending response:', responseData);
-      res.json(responseData);
-    } else {
-      console.log('No user in request');
-      res.status(401).json({ error: 'Not authenticated' });
-    }
-  } catch (error) {
-    console.error('Error in /current_user:', error);
-    res.status(500).json({ error: 'Internal server error', details: error.message });
   }
 });
 

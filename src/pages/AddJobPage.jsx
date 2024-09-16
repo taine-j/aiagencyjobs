@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 
 const AddJobPage = ({ addJobSubmit }) => {
   const [title, setTitle] = useState('');
-  const [type, setType] = useState('Full-Time');
+  const [type, setType] = useState('One Off');
   const [location, setLocation] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');

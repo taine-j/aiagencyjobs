@@ -63,11 +63,6 @@ const ApplicationList = ({ applications = [], type, onStatusUpdate, onApplicatio
     <div className="space-y-4">
       {applications.map((application) => (
         <div key={application._id} className="bg-white p-6 rounded-lg shadow-md">
-          <Link to={`/application/${application._id}`} className="block mb-2">
-            <h3 className="text-xl font-semibold text-indigo-600 hover:text-indigo-800 transition duration-300 ease-in-out">
-              {application.job?.title || 'Untitled Job'}
-            </h3>
-          </Link>
           <p className="text-gray-600 mb-2">Status: <span className="font-semibold">{application.status}</span></p>
           <p className="text-gray-500 mb-2">Applied on: {new Date(application.createdAt).toLocaleDateString()}</p>
           {type === 'received' && (
@@ -76,11 +71,10 @@ const ApplicationList = ({ applications = [], type, onStatusUpdate, onApplicatio
           <div className="flex space-x-2 mt-4">
             {application.job && (
               <Link
-                to={`/jobs/${application.job._id}`}
-                state={{ from: 'inbox' }}
-                className="inline-block bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                to={`/application/${application._id}`}
+                className="inline-block bg-indigo-500 text-white rounded-lg px-4 py-2 hover:bg-indigo-600"
               >
-                View Job Details
+                View Application Details
               </Link>
             )}
 
@@ -88,13 +82,13 @@ const ApplicationList = ({ applications = [], type, onStatusUpdate, onApplicatio
               <>
                 <button
                   onClick={() => handleStatusUpdate(application._id, 'Accepted')}
-                  className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                  className="inline-block bg-green-500 text-white rounded-lg px-4 py-2 hover:bg-green-600"
                 >
                   Accept
                 </button>
                 <button
                   onClick={() => handleStatusUpdate(application._id, 'Rejected')}
-                  className="inline-block bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                  className="inline-block bg-red-500 text-white rounded-lg px-4 py-2 hover:bg-red-600"
                 >
                   Reject
                 </button>
@@ -104,7 +98,7 @@ const ApplicationList = ({ applications = [], type, onStatusUpdate, onApplicatio
             {type === 'sent' && (
               <button
                 onClick={() => handleApplicationAction(application._id, 'withdraw')}
-                className="inline-block bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                className="inline-block bg-yellow-500 text-white rounded-lg px-4 py-2 hover:bg-yellow-600"
               >
                 Withdraw Application
               </button>
@@ -113,7 +107,7 @@ const ApplicationList = ({ applications = [], type, onStatusUpdate, onApplicatio
             {type === 'received' && application.status === 'Rejected' && (
               <button
                 onClick={() => handleApplicationAction(application._id, 'delete')}
-                className="inline-block bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                className="inline-block bg-gray-500 text-white rounded-lg px-4 py-2 hover:bg-gray-600"
               >
                 Delete Application
               </button>

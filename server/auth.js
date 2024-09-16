@@ -109,7 +109,9 @@ export function configureAuth(app) {
         companyDescription: req.user.companyDescription,
         techStack: req.user.techStack,
         profilePicture: req.user.profilePicture,
-        useCompanyName: req.user.useCompanyName
+        useCompanyName: req.user.useCompanyName,
+        googleId: req.user.googleId,
+        appliedJobs: req.user.appliedJobs || []
       });
     } else {
       console.log('User is not authenticated');
