@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Spinner from '../components/Spinner';
-import { FaArrowLeft, FaCalendar, FaUser, FaFileAlt, FaLink, FaEnvelope, FaPhone } from 'react-icons/fa';
+import { FaArrowLeft, FaCalendar, FaUser, FaFileAlt, FaLink, FaEnvelope, FaPhone, FaTrash } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 
 const ApplicationDetailsPage = () => {
   const { id } = useParams();
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchApplicationDetails = async () => {
@@ -49,9 +51,36 @@ const ApplicationDetailsPage = () => {
     }
   };
 
-  useEffect(() => {
-    console.log('Application state updated:', application);
-  }, [application]);
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      const response = await axios.post(`/api/applications/${id}/status`, 
+        { status: newStatus },
+        { withCredentials: true }
+      );
+      
+      if (response.status === 200) {
+        toast.success(`Application ${newStatus.toLowerCase()} successfully`);
+        setApplication({ ...application, status: newStatus });
+      }
+    } catch (error) {
+      console.error('Error updating application status:', error);
+      toast.error('Failed to update application status');
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      const response = await axios.post(`/api/applications/${id}/delete`, {}, { withCredentials: true });
+      
+      if (response.status === 200) {
+        toast.success('Application deleted successfully');
+        navigate('/inbox');
+      }
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      toast.error('Failed to delete application');
+    }
+  };
 
   if (loading) return <Spinner loading={loading} />;
   if (error) return <div className="text-red-500 text-center">{error}</div>;
@@ -106,6 +135,14 @@ const ApplicationDetailsPage = () => {
                   </button>
                 </div>
               )}
+              {application.projectLinks && (
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold mb-2 flex items-center">
+                    <FaLink className="mr-2" /> Project Links
+                  </h4>
+                  <p className="text-blue-500 break-words">{application.projectLinks}</p>
+                </div>
+              )}
             </div>
           </main>
 
@@ -114,14 +151,29 @@ const ApplicationDetailsPage = () => {
               <h3 className="text-xl font-bold mb-6">Additional Information</h3>
               <div className="space-y-4">
                 <p className="text-gray-600 font-semibold">Status: <span className="text-indigo-600">{application.status}</span></p>
-                
-                {application.projectLinks && (
-                  <div>
-                    <h4 className="text-lg font-semibold mb-2 flex items-center">
-                      <FaLink className="mr-2" /> Project Links
-                    </h4>
-                    <p className="text-blue-500 break-words">{application.projectLinks}</p>
+                {application.status === 'Pending' && (
+                  <div className="flex space-x-2 mt-4">
+                    <button
+                      onClick={() => handleStatusUpdate('Accepted')}
+                      className="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleStatusUpdate('Rejected')}
+                      className="inline-block bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                    >
+                      Reject
+                    </button>
                   </div>
+                )}
+                {application.status === 'Rejected' && (
+                  <button
+                    onClick={handleDelete}
+                    className="inline-block bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                  >
+                    <FaTrash className="mr-2 inline" /> Delete Application
+                  </button>
                 )}
               </div>
             </div>

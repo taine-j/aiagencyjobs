@@ -36,10 +36,10 @@ const JobPage = ({ deleteJob }) => {
         const userRes = await fetch('/api/current_user', { credentials: 'include' });
         const userData = await userRes.json();
         
-        const applicationsRes = await fetch('/api/user-applications', { credentials: 'include' });
-        const applicationsData = await applicationsRes.json();
-        
+        console.log('user data',userData)
+
         setJob(jobData);
+        
         const isOwnerValue = userData && 
           jobData && 
           jobData.postedBy && 
@@ -47,8 +47,15 @@ const JobPage = ({ deleteJob }) => {
         
         setIsOwner(isOwnerValue);
         
-        const hasAppliedValue = applicationsData.some(app => app.job === id);
+        // Update this line to handle potentially undefined appliedJobs
+        const hasAppliedValue = userData.appliedJobs ? userData.appliedJobs.includes(id) : false;
+        console.log('has applied value', hasAppliedValue);
         setHasApplied(hasAppliedValue);
+
+        // Add these console logs for debugging
+        console.log('Current job ID:', id);
+        console.log('User applied jobs:', userData.appliedJobs);
+        console.log('Has applied value:', hasAppliedValue);
       } catch (error) {
         console.error('Error fetching job or user data:', error);
         setError(error.message || 'Failed to load job. Please try again later.');
@@ -80,7 +87,7 @@ const JobPage = ({ deleteJob }) => {
   if (loading) return <Spinner loading={loading} />;
   if (error) return <div className="text-center text-red-500">{error}</div>;
   if (!job) return <div className="text-center">Job not found</div>;
-
+ 
   return (
     <>
       <section>

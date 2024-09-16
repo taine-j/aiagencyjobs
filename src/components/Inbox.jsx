@@ -10,31 +10,47 @@ const Inbox = () => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    
-    const fetchApplications = async () => {
-      try {
-        const response = await axios.get('/api/job-applications', { withCredentials: true });
-        console.log('Server response:', response.data);
-
-        if (response.data && typeof response.data === 'object') {
-          setApplications({
-            sent: Array.isArray(response.data.sent) ? response.data.sent : [],
-            received: Array.isArray(response.data.received) ? response.data.received : []
-          });
-        } else {
-          console.error('Unexpected response structure:', response.data);
-          throw new Error('Unexpected response format');
-        }
-      } catch (err) {
-        console.error('Error fetching applications:', err);
-        setError(err.response?.data?.error || err.message || 'Failed to fetch your applications');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchApplications();
   }, []);
+
+  const fetchApplications = async () => {
+    try {
+      const response = await axios.get('/api/job-applications', { withCredentials: true });
+      console.log('Server response:', response.data);
+
+      if (response.data && typeof response.data === 'object') {
+        setApplications({
+          sent: Array.isArray(response.data.sent) ? response.data.sent : [],
+          received: Array.isArray(response.data.received) ? response.data.received : []
+        });
+      } else {
+        console.error('Unexpected response structure:', response.data);
+        throw new Error('Unexpected response format');
+      }
+    } catch (err) {
+      console.error('Error fetching applications:', err);
+      setError(err.response?.data?.error || err.message || 'Failed to fetch your applications');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusUpdate = (applicationId, newStatus) => {
+    setApplications(prevState => ({
+      ...prevState,
+      received: prevState.received.map(app => 
+        app._id === applicationId ? { ...app, status: newStatus } : app
+      )
+    }));
+  };
+
+  const handleApplicationAction = (applicationId, action) => {
+    setApplications(prevState => ({
+      ...prevState,
+      sent: prevState.sent.filter(app => app._id !== applicationId),
+      received: prevState.received.filter(app => app._id !== applicationId)
+    }));
+  };
 
   if (loading) return <Spinner loading={loading} />;
   if (error) return <div className="text-red-500 text-center">{error}</div>;
@@ -50,7 +66,11 @@ const Inbox = () => {
               <div>
                 <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Applications Sent</h3>
                 {applications.sent && applications.sent.length > 0 ? (
-                  <ApplicationList applications={applications.sent} type="sent" />
+                  <ApplicationList 
+                    applications={applications.sent} 
+                    type="sent" 
+                    onApplicationAction={handleApplicationAction}
+                  />
                 ) : (
                   <p className="text-gray-600">You haven't submitted any job applications yet.</p>
                 )}
@@ -59,7 +79,12 @@ const Inbox = () => {
               <div className="md:border-l md:border-gray-200 md:pl-8">
                 <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Applications Received</h3>
                 {applications.received && applications.received.length > 0 ? (
-                  <ApplicationList applications={applications.received} type="received" />
+                  <ApplicationList 
+                    applications={applications.received} 
+                    type="received" 
+                    onStatusUpdate={handleStatusUpdate}
+                    onApplicationAction={handleApplicationAction}
+                  />
                 ) : (
                   <p className="text-gray-600">You haven't received any job applications yet.</p>
                 )}

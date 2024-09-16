@@ -247,6 +247,10 @@ app.post('/job-applications', upload.fields([
     console.log('Saved application with cvPath:', newApplication.cvPath);
 
     await newApplication.save();
+
+    // Add the job to the user's appliedJobs array
+    await User.findByIdAndUpdate(req.user._id, { $addToSet: { appliedJobs: job } });
+
     console.log('Application saved successfully');
     res.status(201).json({ message: 'Application submitted successfully' });
   } catch (error) {
@@ -389,48 +393,77 @@ app.get('/user_jobs', async (req, res) => {
 });
 
 // Get job applications for the current user
-app.get('/job-applications', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
-  
+app.get('/job-applications', requireLogin, async (req, res) => {
   try {
-    console.log('Fetching applications for user:', req.user._id);
+    const userId = req.user._id;
+    console.log('Current user ID:', userId);
 
-    const sentApplications = await JobApplication.find({ applicant: req.user._id })
-      .populate('job')
+    const sentApplications = await JobApplication.find({ applicant: userId })
+      .populate('job', 'title')
       .sort({ createdAt: -1 });
 
-    const postedJobs = await Job.find({ postedBy: req.user._id });
-    const receivedApplications = await JobApplication.find({ job: { $in: postedJobs.map(job => job._id) } })
-      .populate('job')
-      .populate('applicant', 'displayName email')
+    console.log('Sent applications query:', { applicant: userId });
+    console.log('Sent applications:', sentApplications);
+
+    // First, find all jobs posted by the user
+    const userJobs = await Job.find({ postedBy: userId }).select('_id');
+    const userJobIds = userJobs.map(job => job._id);
+
+    console.log('User job IDs:', userJobIds);
+
+    // Then, find applications for these jobs
+    const receivedApplications = await JobApplication.find({
+      job: { $in: userJobIds },
+      $or: [
+        { deletedByEmployer: false },
+        { deletedByEmployer: { $exists: false } }
+      ]
+    })
+      .populate('job', 'title')
+      .populate('applicant', 'displayName')
       .sort({ createdAt: -1 });
 
-    console.log('Sent applications:', JSON.stringify(sentApplications));
-    console.log('Received applications:', JSON.stringify(receivedApplications));
+    console.log('Received applications query:', { job: { $in: userJobIds } });
+    console.log('Received applications before filter:', receivedApplications);
 
-    const response = { sent: sentApplications, received: receivedApplications };
-    console.log('Sending response:', JSON.stringify(response));
-
-    res.json(response);
+    res.json({
+      sent: sentApplications,
+      received: receivedApplications
+    });
   } catch (error) {
-    console.error('Error fetching applications:', error);
-    res.status(500).json({ error: 'Unable to fetch applications', details: error.message });
+    console.error('Error fetching job applications:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
 // Route to check the current user
-app.get('/current_user', (req, res) => {
+app.get('/current_user', async (req, res) => {
   try {
+    console.log('Current user route triggered');
     if (req.user) {
-      res.json({
-        id: req.user._id,
-        displayName: req.user.displayName,
-        email: req.user.emails[0].value,
-        googleId: req.user.googleId,
-      });
+      console.log('User found in request:', req.user);
+      // Fetch the full user document from the database
+      const user = await User.findById(req.user._id);
+      if (!user) {
+        console.log('User not found in database');
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      console.log('User found in database:', user);
+      console.log('Applied jobs:', user.appliedJobs);
+
+      const responseData = {
+        id: user._id,
+        displayName: user.displayName,
+        email: user.emails[0].value,
+        googleId: user.googleId,
+        appliedJobs: user.appliedJobs || []
+      };
+
+      console.log('Sending response:', responseData);
+      res.json(responseData);
     } else {
+      console.log('No user in request');
       res.status(401).json({ error: 'Not authenticated' });
     }
   } catch (error) {
@@ -528,6 +561,96 @@ app.get('/applications/:id/:docType-url', requireLogin, async (req, res) => {
   }
 });
 
+// Add this near your other application routes
+app.post('/applications/:id/status', requireLogin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['Accepted', 'Rejected'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const application = await JobApplication.findById(id)
+      .populate('job', 'postedBy');
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Check if the current user is the job poster
+    if (application.job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Not authorized to update this application' });
+    }
+
+    application.status = status;
+    await application.save();
+
+    res.json({ message: 'Application status updated successfully', application });
+  } catch (error) {
+    console.error('Error updating application status:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Add these new routes
+
+// Withdraw application (for applicants)
+app.post('/applications/:id/withdraw', requireLogin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log(`Attempting to withdraw application ${id}`);
+
+    const application = await JobApplication.findById(id);
+
+    if (!application) {
+      console.log(`Application ${id} not found`);
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Check if the current user is the applicant
+    if (application.applicant.toString() !== req.user._id.toString()) {
+      console.log(`User ${req.user._id} not authorized to withdraw application ${id}`);
+      return res.status(403).json({ error: 'Not authorized to withdraw this application' });
+    }
+
+    // Delete the application entirely
+    await JobApplication.findByIdAndDelete(id);
+
+    console.log(`Application ${id} withdrawn successfully`);
+    res.json({ message: 'Application withdrawn successfully' });
+  } catch (error) {
+    console.error('Error withdrawing application:', error);
+    res.status(500).json({ error: 'Server error', details: error.message });
+  }
+});
+
+// Delete application (for employers)
+app.post('/applications/:id/delete', requireLogin, async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const application = await JobApplication.findById(id).populate('job', 'postedBy');
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Check if the current user is the job poster and the application is rejected
+    if (application.job.postedBy.toString() !== req.user._id.toString() || application.status !== 'Rejected') {
+      return res.status(403).json({ error: 'Not authorized to delete this application' });
+    }
+
+    application.deletedByEmployer = true;
+    await application.save();
+
+    res.json({ message: 'Application deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting application:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 // Catch-all handler to serve React's index.html for all unknown routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../index.html'));
@@ -548,4 +671,5 @@ app.get('/test-s3', async (req, res) => {
     res.status(500).json({ error: 'S3 test failed', details: error.message, stack: error.stack });
   }
 });
+
 

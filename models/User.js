@@ -16,7 +16,8 @@ const userSchema = new mongoose.Schema({
   companyDescription: String,
   techStack: String,
   profilePicture: String,
-  useCompanyName: Boolean
+  useCompanyName: Boolean,
+  appliedJobs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Job' }]
 });
 
 const User = mongoose.model('User', userSchema);

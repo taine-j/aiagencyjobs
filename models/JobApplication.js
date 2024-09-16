@@ -29,7 +29,12 @@ const jobApplicationSchema = new mongoose.Schema({
   },
   status: {
     type: String,
+    enum: ['Pending', 'Accepted', 'Rejected'],
     default: 'Pending'
+  },
+  deletedByEmployer: {
+    type: Boolean,
+    default: false
   },
   createdAt: {
     type: Date,
