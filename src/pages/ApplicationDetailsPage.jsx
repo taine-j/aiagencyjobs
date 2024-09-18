@@ -4,7 +4,7 @@ import axios from 'axios';
 import Spinner from '../components/Spinner';
 import { FaArrowLeft, FaCalendar, FaUser, FaFileAlt, FaLink, FaEnvelope, FaPhone, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { fetchPendingApplicationsCount } from './Navbar';
+import { fetchPendingApplicationsCount } from '../components/Navbar';
 
 const ApplicationDetailsPage = () => {
   const { id } = useParams();

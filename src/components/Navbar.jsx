@@ -1,25 +1,31 @@
+import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
-import { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
 
+// Define fetchPendingApplicationsCount outside of the component
+export const fetchPendingApplicationsCount = async () => {
+  try {
+    const response = await axios.get('/api/pending-applications-count', { withCredentials: true });
+    return response.data.count;
+  } catch (error) {
+    console.error('Error fetching pending applications count:', error);
+    return 0;
+  }
+};
 
-const Navbar = ( { isAuthenticated } ) => {
+const Navbar = ({ isAuthenticated }) => {
   const [pendingApplications, setPendingApplications] = useState(0);
 
-  const fetchPendingApplicationsCount = useCallback(async () => {
+  const updatePendingApplicationsCount = useCallback(async () => {
     if (!isAuthenticated) return;
-    try {
-      const response = await axios.get('/api/pending-applications-count', { withCredentials: true });
-      setPendingApplications(response.data.count);
-    } catch (error) {
-      console.error('Error fetching pending applications count:', error);
-    }
+    const count = await fetchPendingApplicationsCount();
+    setPendingApplications(count);
   }, [isAuthenticated]);
 
   useEffect(() => {
-    fetchPendingApplicationsCount();
-  }, [fetchPendingApplicationsCount]);
+    updatePendingApplicationsCount();
+  }, [updatePendingApplicationsCount]);
 
   const linkClass = ({ isActive }) =>
     isActive
@@ -95,4 +101,5 @@ const Navbar = ( { isAuthenticated } ) => {
     </nav>
   );
 };
-export default { Navbar, fetchPendingApplicationsCount };
+
+export default Navbar;
