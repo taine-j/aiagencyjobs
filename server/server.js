@@ -449,6 +449,44 @@ app.get('/document/:type/:filename', requireLogin, async (req, res) => {
   }
 });
 
+// Get total count of pending applications for a user
+app.get('/pending-applications-count', requireLogin, async (req, res) => {
+  try {
+    const userId = req.user._id;
+
+    // Fetch all job IDs posted by the user
+    const userPostedJobs = await Job.find({ postedBy: userId }).select('_id');
+    const userPostedJobIds = userPostedJobs.map(job => job._id);
+
+    console.log('User posted job IDs:', userPostedJobIds);
+    
+    // Count pending applications for each job posted by the user
+    const pendingCounts = await JobApplication.aggregate([
+      {
+        $match: {
+          job: { $in: userPostedJobIds },
+          status: 'Pending'
+        }
+      },
+      {
+        $group: {
+          _id: '$job',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Calculate total pending count
+    const pendingCount = pendingCounts.reduce((total, job) => total + job.count, 0);
+
+    res.json({ count: pendingCount });
+  } catch (error) {
+    console.error('Error fetching pending applications count:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 // Update the existing route or add a new one for both CV and supporting docs
 app.get('/applications/:id/:docType-url', requireLogin, async (req, res) => {
   try {

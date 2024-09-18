@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Spinner from './Spinner';
 import ApplicationList from './ApplicationList';
+import { fetchPendingApplicationsCount } from './Navbar';
+
 
 const Inbox = () => {
   const [applications, setApplications] = useState({ sent: [], received: [] });
@@ -42,6 +44,7 @@ const Inbox = () => {
         app._id === applicationId ? { ...app, status: newStatus } : app
       )
     }));
+    fetchPendingApplicationsCount()
   };
 
   const handleApplicationAction = (applicationId, action) => {

@@ -98,6 +98,7 @@ export function configureAuth(app) {
     console.log('Session:', req.session);
     console.log('User:', req.user);
     if (req.user) {
+
       const userWithoutProfilePicture = {
         id: req.user.id,
         displayName: req.user.displayName,

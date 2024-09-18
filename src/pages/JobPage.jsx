@@ -167,7 +167,7 @@ const JobPage = ({ deleteJob }) => {
                 <div className="mt-4">
                   <Link
                     to={`/apply/${job._id}`}
-                    className={`bg-green-500 text-white font-bold py-2 px-4 rounded ${
+                    className={`inline-block bg-green-500 text-white py-2 px-4 rounded-lg ${
                       hasApplied ? 'opacity-50 cursor-not-allowed' : 'hover:bg-green-600'
                     }`}
                     onClick={(e) => {

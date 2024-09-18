@@ -4,6 +4,7 @@ import axios from 'axios';
 import Spinner from '../components/Spinner';
 import { FaArrowLeft, FaCalendar, FaUser, FaFileAlt, FaLink, FaEnvelope, FaPhone, FaTrash } from 'react-icons/fa';
 import { toast } from 'react-toastify';
+import { fetchPendingApplicationsCount } from './Navbar';
 
 const ApplicationDetailsPage = () => {
   const { id } = useParams();
@@ -81,6 +82,7 @@ const ApplicationDetailsPage = () => {
       if (response.status === 200) {
         toast.success(`Application ${newStatus.toLowerCase()} successfully`);
         setApplication({ ...application, status: newStatus });
+        fetchPendingApplicationsCount()
       }
     } catch (error) {
       console.error('Error updating application status:', error);

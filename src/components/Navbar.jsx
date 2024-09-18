@@ -1,7 +1,26 @@
 import { NavLink } from 'react-router-dom';
+import { useState, useEffect, useCallback } from 'react';
+import axios from 'axios';
 import logo from '../assets/images/logo.png';
 
+
 const Navbar = ( { isAuthenticated } ) => {
+  const [pendingApplications, setPendingApplications] = useState(0);
+
+  const fetchPendingApplicationsCount = useCallback(async () => {
+    if (!isAuthenticated) return;
+    try {
+      const response = await axios.get('/api/pending-applications-count', { withCredentials: true });
+      setPendingApplications(response.data.count);
+    } catch (error) {
+      console.error('Error fetching pending applications count:', error);
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    fetchPendingApplicationsCount();
+  }, [fetchPendingApplicationsCount]);
+
   const linkClass = ({ isActive }) =>
     isActive
       ? 'bg-black text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2'
@@ -54,8 +73,13 @@ const Navbar = ( { isAuthenticated } ) => {
                 </NavLink>
                 )}
                 {isAuthenticated && (
-                <NavLink to='/inbox' className={linkClass}>
+                <NavLink to='/inbox' className={`${linkClass} relative flex items-center`}>
                   Inbox
+                  {pendingApplications > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-4 w-4 flex items-center justify-center">
+                      {pendingApplications}
+                    </span>
+                  )}
                 </NavLink>
                 )}
                 {isAuthenticated && (
@@ -71,4 +95,4 @@ const Navbar = ( { isAuthenticated } ) => {
     </nav>
   );
 };
-export default Navbar;
+export default { Navbar, fetchPendingApplicationsCount };
