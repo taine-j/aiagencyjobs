@@ -98,8 +98,7 @@ export function configureAuth(app) {
     console.log('Session:', req.session);
     console.log('User:', req.user);
     if (req.user) {
-      console.log('User is authenticated:', req.user);
-      res.json({
+      const userWithoutProfilePicture = {
         id: req.user.id,
         displayName: req.user.displayName,
         emails: req.user.emails,
@@ -108,10 +107,14 @@ export function configureAuth(app) {
         location: req.user.location,
         companyDescription: req.user.companyDescription,
         techStack: req.user.techStack,
-        profilePicture: req.user.profilePicture,
-        useCompanyName: req.user.useCompanyName,
         googleId: req.user.googleId,
         appliedJobs: req.user.appliedJobs || []
+      };
+
+      console.log('User is authenticated:', userWithoutProfilePicture);
+      res.json({
+        ...userWithoutProfilePicture,
+        profilePicture: req.user.profilePicture // Include profilePicture in the response
       });
     } else {
       console.log('User is not authenticated');

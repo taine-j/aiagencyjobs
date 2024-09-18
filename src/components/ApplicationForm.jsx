@@ -181,7 +181,7 @@ const ApplicationForm = ({ jobId }) => {
         <div>
           <button
             type="submit"
-            className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline"
+            className="inline-block bg-indigo-500 text-white rounded-lg px-4 py-2 hover:bg-indigo-600"
           >
             Submit Application
           </button>

@@ -150,13 +150,13 @@ const JobPage = ({ deleteJob }) => {
                 <div className="mt-4 flex gap-2">
                   <Link
                     to={`/edit-job/${job._id}`}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded flex-1 text-center"
+                    className="inline-block bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg"
                   >
                     Edit Job
                   </Link>
                   <button
                     onClick={onDeleteClick}
-                    className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded flex-1"
+                    className="inline-block bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg"
                   >
                     Delete Job
                   </button>

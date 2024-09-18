@@ -20,31 +20,30 @@ import ProfilePage from './pages/ProfilePage';
 import JobApplicationPage from './pages/JobApplicationPage';
 import InboxPage from './pages/InboxPage';
 import ApplicationDetailsPage from './pages/ApplicationDetailsPage';
+import axios from 'axios';
 
+const App = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const App = () => {
-
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-    useEffect(() => {
-      // Check if the user is authenticated
-      const checkAuth = async () => {
-        try {
-          const res = await fetch('/api/current_user', {
-            credentials: 'include', // Ensure cookies are sent with the request
-          });
-          if (res.ok) {
-            setIsAuthenticated(true);
-          } else {
-            setIsAuthenticated(false);
-          }
-        } catch (error) {
+  useEffect(() => {
+    // Check if the user is authenticated
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/current_user', {
+          credentials: 'include', // Ensure cookies are sent with the request
+        });
+        if (res.ok) {
+          setIsAuthenticated(true);
+        } else {
           setIsAuthenticated(false);
         }
-      };
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
   
-      checkAuth();
-    }, []);
+    checkAuth();
+  }, []);
 
   // Add New Job
   const addJob = async (newJob) => {
@@ -98,6 +97,7 @@ import ApplicationDetailsPage from './pages/ApplicationDetailsPage';
     });
     return;
   };
+
 
   const router = createBrowserRouter(
     createRoutesFromElements(

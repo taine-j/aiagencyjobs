@@ -10,6 +10,7 @@ const ApplicationDetailsPage = () => {
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentUserId, setCurrentUserId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,6 +27,23 @@ const ApplicationDetailsPage = () => {
     };
 
     fetchApplicationDetails();
+  }, [id]);
+
+  useEffect(() => {
+    const fetchUserId = async () => {
+      try {
+        const response = await axios.get('/api/current_user');
+      const res = response.data;
+      const userId = res.id;
+      setCurrentUserId(userId);
+      return userId; // Ensure the user ID is returned
+    } catch (err) {
+      console.error('Error fetching user ID:', err);
+      setError('Failed to fetch userID');
+      setLoading(false);
+    }
+  };
+  fetchUserId();
   }, [id]);
 
   const handleViewCV = async () => {
@@ -53,11 +71,13 @@ const ApplicationDetailsPage = () => {
 
   const handleStatusUpdate = async (newStatus) => {
     try {
+      console.log('Updating status to:', newStatus); // Debugging log
       const response = await axios.post(`/api/applications/${id}/status`, 
         { status: newStatus },
         { withCredentials: true }
       );
       
+      console.log('Server response:', response); // Debugging log
       if (response.status === 200) {
         toast.success(`Application ${newStatus.toLowerCase()} successfully`);
         setApplication({ ...application, status: newStatus });
@@ -152,8 +172,8 @@ const ApplicationDetailsPage = () => {
               <div className="space-y-4">
                 <p className="text-gray-600 font-semibold">Status: <span className="text-indigo-600">{application.status}</span></p>
                 {application.status === 'Accepted' && (<p className="text-gray-600 font-semibold">We'll notify {application.applicant?.displayName} that you will be in contact with them shortly.</p>)}
-                {application.status === 'Pending' && (
-                  <div className="flex space-x-2 mt-4">
+                {application.applicant?._id !== currentUserId && ( // Check if the user is not the job poster
+                  <div className="flex space-x-2 mt-4"> 
                     <button
                       onClick={() => handleStatusUpdate('Accepted')}
                       className="inline-block bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg"
@@ -166,12 +186,12 @@ const ApplicationDetailsPage = () => {
                     >
                       Reject
                     </button>
-                  </div>
+                  </div> 
                 )}
                 {application.status === 'Rejected' && (
                   <button
                     onClick={handleDelete}
-                    className="inline-block bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-full focus:outline-none focus:shadow-outline transition duration-300 ease-in-out"
+                    className="inline-block bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg"
                   >
                     <FaTrash className="mr-2 inline" /> Delete Application
                   </button>

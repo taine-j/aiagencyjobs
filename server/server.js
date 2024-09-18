@@ -148,10 +148,8 @@ app.get('/jobs/:id', async (req, res) => {
   try {
     const job = await Job.findById(jobId).populate('postedBy', '_id email googleId');
     if (!job) {
-      console.log(`Job with id ${jobId} not found`);
       return res.status(404).json({ error: `Job with id ${jobId} not found` });
     }
-    console.log('Job fetched:', JSON.stringify(job, null, 2));
     res.json(job);
   } catch (error) {
     console.error('Error fetching job:', error);
@@ -164,7 +162,7 @@ app.delete('/jobs/:id', async (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
-  
+
   const jobId = req.params.id;
 
   try {
@@ -172,9 +170,6 @@ app.delete('/jobs/:id', async (req, res) => {
     if (!job) {
       return res.status(404).json({ error: `Job with id ${jobId} not found` });
     }
-
-    console.log('Job to delete:', job);
-    console.log('User trying to delete:', req.user);
 
     if (job.postedBy.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'You are not authorized to delete this job' });
@@ -190,45 +185,45 @@ app.delete('/jobs/:id', async (req, res) => {
 
 // Route to update a job by ID
 app.put('/jobs/:id', (req, res) => {
-    const jobId = req.params.id;
-    const updatedJob = req.body;
+  const jobId = req.params.id;
+  const updatedJob = req.body;
 
-    fs.readFile(path.join(__dirname, '../data/jobs.json'), 'utf8', (err, data) => {
-        if (err) {
-            console.error('Error reading the file:', err);
-            return res.status(500).json({ error: 'Unable to read data' });
-        }
+  fs.readFile(path.join(__dirname, '../data/jobs.json'), 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading the file:', err);
+      return res.status(500).json({ error: 'Unable to read data' });
+    }
 
-        try {
-            const parsedData = JSON.parse(data);
-            let jobs = parsedData.jobs;
+    try {
+      const parsedData = JSON.parse(data);
+      let jobs = parsedData.jobs;
 
-            if (Array.isArray(jobs)) {
-                const jobIndex = jobs.findIndex(job => job.id === jobId);
+      if (Array.isArray(jobs)) {
+        const jobIndex = jobs.findIndex(job => job.id === jobId);
 
                 if (jobIndex !== -1) {
                     jobs[jobIndex] = { ...jobs[jobIndex], ...updatedJob };
 
-                    fs.writeFile(path.join(__dirname, '../data/jobs.json'), JSON.stringify({ jobs }), 'utf8', (err) => {
-                        if (err) {
-                            console.error('Error writing to the file:', err);
-                            return res.status(500).json({ error: 'Unable to update job' });
-                        }
-
-                        res.json(jobs[jobIndex]);
-                    });
-                } else {
-                    res.status(404).json({ error: `Job with id ${jobId} not found` });
-                }
-            } else {
-                console.error('Data is not in expected array format:', jobs);
-                res.status(500).json({ error: 'Data is not in expected array format' });
+          fs.writeFile(path.join(__dirname, '../data/jobs.json'), JSON.stringify({ jobs }), 'utf8', (err) => {
+            if (err) {
+              console.error('Error writing to the file:', err);
+              return res.status(500).json({ error: 'Unable to update job' });
             }
-        } catch (parseError) {
-            console.error('Error parsing JSON data:', parseError);
-            res.status(500).json({ error: 'Error parsing JSON data' });
+
+            res.json(jobs[jobIndex]);
+          });
+        } else {
+          res.status(404).json({ error: `Job with id ${jobId} not found` });
         }
-    });
+      } else {
+        console.error('Data is not in expected array format:', jobs);
+        res.status(500).json({ error: 'Data is not in expected array format' });
+      }
+    } catch (parseError) {
+      console.error('Error parsing JSON data:', parseError);
+      res.status(500).json({ error: 'Error parsing JSON data' });
+    }
+  });
 });
 
 
@@ -237,20 +232,12 @@ app.post('/job-applications', upload.fields([
   { name: 'cv', maxCount: 1 },
   { name: 'supportingDocs', maxCount: 1 }
 ]), async (req, res) => {
-  console.log('Received job application request');
-  console.log('Request body:', req.body);
-  console.log('Request files:', JSON.stringify(req.files, null, 2));
-  
   if (!req.user) {
-    console.log('Unauthorized access attempt');
     return res.status(401).json({ error: 'Unauthorized' });
   }
   try {
-    console.log('Received application data:', req.body);
-    console.log('Received files:', JSON.stringify(req.files, null, 2));
-
     const { job, message, skills, projectLinks, phone, email } = req.body;
-    
+
     if (!job || !skills || !email) {
       console.log('Missing required fields');
       return res.status(400).json({ error: 'Job, skills, and email are required fields' });
@@ -261,12 +248,8 @@ app.post('/job-applications', upload.fields([
 
     if (req.files['cv']) {
       const cvFile = req.files['cv'][0];
-      console.log('CV file:', JSON.stringify(cvFile, null, 2));
-      
-      // Store the full key without the 'cv/' prefix
       cvPath = cvFile.key || `${Date.now().toString()}-${cvFile.originalname}`;
-      
-      // Manual upload to S3 if multer-s3 failed
+
       if (!cvFile.location) {
         const uploadParams = {
           Bucket: process.env.S3_BUCKET_NAME,
@@ -313,9 +296,6 @@ app.post('/job-applications', upload.fields([
       email,
     });
 
-    console.log('New application object:', JSON.stringify(newApplication, null, 2));
-    console.log('Saved application with cvPath:', newApplication.cvPath);
-
     await newApplication.save();
 
     // Add the job to the user's appliedJobs array
@@ -336,9 +316,6 @@ app.get('/applications/:id', requireLogin, async (req, res) => {
       .populate('job', 'title postedBy')
       .populate('applicant', 'displayName');
 
-      console.log('Application:', application);
-      console.log('Retrieved application with cvPath:', application.cvPath);
-    
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
     }
@@ -529,6 +506,8 @@ app.post('/applications/:id/status', requireLogin, async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    console.log('Updating application status:', { id, status }); // Debugging log
+
     if (!['Accepted', 'Rejected'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
@@ -539,6 +518,9 @@ app.post('/applications/:id/status', requireLogin, async (req, res) => {
     if (!application) {
       return res.status(404).json({ error: 'Application not found' });
     }
+
+    console.log('Application found:', application); // Debugging log
+    console.log('Job posted by:', application.job.postedBy); // Debugging log
 
     // Check if the current user is the job poster
     if (application.job.postedBy.toString() !== req.user._id.toString()) {
@@ -555,7 +537,6 @@ app.post('/applications/:id/status', requireLogin, async (req, res) => {
   }
 });
 
-// Add these new routes
 
 // Withdraw application (for applicants)
 app.post('/applications/:id/withdraw', requireLogin, async (req, res) => {

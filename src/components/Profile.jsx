@@ -13,32 +13,32 @@ const Profile = () => {
   const [companyDescription, setCompanyDescription] = useState('');
   const [techStack, setTechStack] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
-  const [useCompanyName, setUseCompanyName] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-
-  const fetchUserData = () => {
-    axios.get('/api/current_user')
-      .then(response => {
-        const userData = response.data;
-        setUser(userData);
-        setCompanyName(userData.companyName || '');
-        setLocation(userData.location || '');
-        setCompanyDescription(userData.companyDescription || '');
-        setTechStack(userData.techStack || '');
-        setProfilePicture(userData.profilePicture || '');
-        setUseCompanyName(userData.useCompanyName || false);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error('Error fetching user data:', err);
-        setError('Failed to fetch user data');
-        setLoading(false);
-      });
-  };
+  
 
   useEffect(() => {
+    const fetchUserData = () => {
+      axios.get('/api/current_user')
+        .then(response => {
+          const userData = response.data;
+          setUser(userData);
+          setCompanyName(userData.companyName || '');
+          setLocation(userData.location || '');
+          setCompanyDescription(userData.companyDescription || '');
+          setTechStack(userData.techStack || '');
+          setProfilePicture(userData.profilePicture || '');
+          setLoading(false);
+        })
+        .catch(err => {
+          console.error('Error fetching user data:', err);
+          setError('Failed to fetch user data');
+          setLoading(false);
+        });
+    }; 
+
     fetchUserData();
+
   }, []);
 
   const handleSubmit = (e) => {
@@ -204,10 +204,10 @@ const Profile = () => {
                   <img className="rounded-full w-48 h-48 object-cover shadow-md" src={profilePicture} alt="Profile" />
                 ) : (
                   <div className="w-48 h-48 rounded-full bg-indigo-200 flex items-center justify-center">
-                    <span className="text-4xl text-indigo-500">{(useCompanyName ? companyName : user.displayName).charAt(0)}</span>
+                    <span className="text-4xl text-indigo-500">{(user.displayName).charAt(0)}</span>
                   </div>
                 )}
-                <h3 className="text-2xl font-semibold mt-4 text-center">{useCompanyName ? companyName : user.displayName}</h3>
+                <h3 className="text-2xl font-semibold mt-4 text-center">{user.displayName}</h3>
                 <p className="text-indigo-600 mt-2">{companyName}</p>
               </div>
               <div className="md:w-2/3 p-6">

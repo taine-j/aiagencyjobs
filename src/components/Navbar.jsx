@@ -49,11 +49,6 @@ const Navbar = ( { isAuthenticated } ) => {
                 </NavLink>
                 )}
                 {isAuthenticated && (
-                <NavLink to='/logout' onClick={handleLogout} className={linkClass}>
-                  Logout
-                </NavLink>
-                )}
-                {isAuthenticated && (
                 <NavLink to='/profile' className={linkClass}>
                   Profile 
                 </NavLink>
@@ -61,6 +56,11 @@ const Navbar = ( { isAuthenticated } ) => {
                 {isAuthenticated && (
                 <NavLink to='/inbox' className={linkClass}>
                   Inbox
+                </NavLink>
+                )}
+                {isAuthenticated && (
+                <NavLink to='/logout' onClick={handleLogout} className={linkClass}>
+                  Logout
                 </NavLink>
                 )}
               </div>
