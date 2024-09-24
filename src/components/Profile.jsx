@@ -108,12 +108,12 @@ const Profile = () => {
           {isEditing ? (
             <form onSubmit={handleSubmit} className="p-8">
               <div className="flex flex-col md:flex-row md:space-x-8">
-                <div className="md:w-1/3 bg-indigo-100 p-6 rounded-lg flex flex-col items-center justify-center">
+                <div className="md:w-1/3 bg-blue-100 p-6 rounded-lg flex flex-col items-center justify-center">
                   {profilePicture ? (
                     <img className="rounded-full w-48 h-48 object-cover shadow-md mb-4" src={profilePicture} alt="Profile" />
                   ) : (
-                    <div className="w-48 h-48 rounded-full bg-indigo-200 flex items-center justify-center mb-4">
-                      <span className="text-4xl text-indigo-500">{(useCompanyName ? companyName : user.displayName).charAt(0)}</span>
+                    <div className="w-48 h-48 rounded-full bg-blue-200 flex items-center justify-center mb-4">
+                      <span className="text-4xl text-blue-900">{(useCompanyName ? companyName : user.displayName).charAt(0)}</span>
                     </div>
                   )}
                   <input
@@ -125,7 +125,7 @@ const Profile = () => {
                   />
                   <label
                     htmlFor="profile-picture-input"
-                    className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-full cursor-pointer focus:outline-none focus:shadow-outline transition duration-300 ease-in-out text-sm"
+                    className="bg-blue-900 hover:bg-blue-800 text-white font-bold py-2 px-4 rounded-full cursor-pointer focus:outline-none focus:shadow-outline transition duration-300 ease-in-out text-sm"
                   >
                     Change Picture
                   </label>
@@ -181,7 +181,7 @@ const Profile = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <button
-                      className="inline-block bg-indigo-500 text-white rounded-lg px-4 py-2 hover:bg-indigo-600"
+                      className="inline-block bg-blue-900 text-white rounded-lg px-4 py-2 hover:bg-blue-800"
                       type="submit"
                     >
                       Save Changes
@@ -199,32 +199,32 @@ const Profile = () => {
             </form>
           ) : (
             <div className="flex flex-col md:flex-row">
-              <div className="md:w-1/3 bg-indigo-100 p-6 flex flex-col items-center justify-center">
+              <div className="md:w-1/3 bg-blue-100 p-6 flex flex-col items-center justify-center">
                 {profilePicture ? (
                   <img className="rounded-full w-48 h-48 object-cover shadow-md" src={profilePicture} alt="Profile" />
                 ) : (
-                  <div className="w-48 h-48 rounded-full bg-indigo-200 flex items-center justify-center">
-                    <span className="text-4xl text-indigo-500">{(user.displayName).charAt(0)}</span>
+                  <div className="w-48 h-48 rounded-full bg-blue-200 flex items-center justify-center">
+                    <span className="text-4xl text-blue-900">{(user.displayName).charAt(0)}</span>
                   </div>
                 )}
                 <h3 className="text-2xl font-semibold mt-4 text-center">{user.displayName}</h3>
-                <p className="text-indigo-600 mt-2">{companyName}</p>
+                <p className="text-blue-800 mt-2">{companyName}</p>
               </div>
               <div className="md:w-2/3 p-6">
                 <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-indigo-600 mb-2">Location</h4>
+                  <h4 className="text-lg font-semibold text-blue-800 mb-2">Location</h4>
                   <p className="text-gray-700">{location || 'Not specified'}</p>
                 </div>
                 <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-indigo-600 mb-2">Company Description</h4>
+                  <h4 className="text-lg font-semibold text-blue-800 mb-2">Company Description</h4>
                   <p className="text-gray-700">{companyDescription || 'No description available'}</p>
                 </div>
                 <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-indigo-600 mb-2">Tech Stack</h4>
+                  <h4 className="text-lg font-semibold text-blue-800 mb-2">Tech Stack</h4>
                   <p className="text-gray-700">{techStack || 'Not specified'}</p>
                 </div>
                 <button
-                  className="inline-block bg-indigo-500 text-white rounded-lg px-4 py-2 hover:bg-indigo-600"
+                  className="inline-block bg-blue-900 text-white rounded-lg px-4 py-2 hover:bg-blue-800"
                   onClick={() => setIsEditing(true)}
                 >
                   Edit Profile

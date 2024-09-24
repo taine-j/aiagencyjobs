@@ -25,7 +25,7 @@ const HomeCards = () => {
             </p>
             <Link
               to='/add-job'
-              className='inline-block bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600'
+              className='inline-block bg-blue-900 text-white rounded-lg px-4 py-2 hover:bg-blue-800'
             >
               Add Job
             </Link>

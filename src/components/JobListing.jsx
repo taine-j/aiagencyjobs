@@ -23,7 +23,7 @@ const JobListing = ({ job }) => {
 
         <button
           onClick={() => setShowFullDescription((prevState) => !prevState)}
-          className='text-blue-500 mb-5 hover:text-blue-600'
+          className='text-blue-600 mb-5 hover:text-blue-700'
         >
           {showFullDescription ? 'Less' : 'More'}
         </button>
@@ -39,7 +39,7 @@ const JobListing = ({ job }) => {
           </div>
           <Link
             to={`/jobs/${job._id}`}
-            className='h-[36px] bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-center text-sm'
+            className='h-[36px] bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-center text-sm'
             onClick={() => console.log('Job ID:', job._id)}
           >
             Read More

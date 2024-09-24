@@ -94,7 +94,7 @@ const JobPage = ({ deleteJob }) => {
         <div className='container m-auto py-6 px-6'>
           <Link
             to={fromProfile ? '/profile' : fromInbox ? '/inbox' : '/jobs'}
-            className='text-indigo-500 hover:text-indigo-600 flex items-center'
+            className='text-blue-500 hover:text-blue-600 flex items-center'
           >
             <FaArrowLeft className='mr-2' /> 
             {fromProfile ? 'Back to Profile' : fromInbox ? 'Back to Inbox' : 'Back to Job Listings'}
@@ -102,7 +102,7 @@ const JobPage = ({ deleteJob }) => {
         </div>
       </section>
 
-      <section className='bg-indigo-50'>
+      <section className='bg-blue-50'>
         <div className='container m-auto py-10 px-6'>
           <div className='grid grid-cols-1 md:grid-cols-70/30 w-full gap-6'>
             <main>
@@ -116,13 +116,13 @@ const JobPage = ({ deleteJob }) => {
               </div>
 
               <div className='bg-white p-6 rounded-lg shadow-md mt-6'>
-                <h3 className='text-indigo-800 text-lg font-bold mb-6'>
+                <h3 className='text-blue-900 text-lg font-bold mb-6'>
                   Job Description
                 </h3>
 
                 <p className='mb-4'>{job.description}</p>
 
-                <h3 className='text-indigo-800 text-lg font-bold mb-2'>
+                <h3 className='text-blue-900 text-lg font-bold mb-2'>
                   Price
                 </h3>
 
@@ -137,7 +137,7 @@ const JobPage = ({ deleteJob }) => {
                 <p className='mb-4'>{job.company.description}</p>
                 <a
                   href={`mailto:${job.company.contactEmail}`}
-                  className='text-indigo-500 hover:text-indigo-600 block mb-4'
+                  className='text-blue-500 hover:text-blue-600 block mb-4'
                 >
                   {job.company.contactEmail}
                 </a>
@@ -150,7 +150,7 @@ const JobPage = ({ deleteJob }) => {
                 <div className="mt-4 flex gap-2">
                   <Link
                     to={`/edit-job/${job._id}`}
-                    className="inline-block bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg"
+                    className="inline-block bg-blue-900 hover:bg-blue-800 text-white py-2 px-4 rounded-lg"
                   >
                     Edit Job
                   </Link>

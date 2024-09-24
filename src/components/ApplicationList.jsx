@@ -72,7 +72,7 @@ const ApplicationList = ({ applications = [], type, onStatusUpdate, onApplicatio
             {application.job && (
               <Link
                 to={`/application/${application._id}`}
-                className="inline-block bg-indigo-500 text-white rounded-lg px-4 py-2 hover:bg-indigo-600"
+                className="inline-block bg-blue-900 text-white rounded-lg px-4 py-2 hover:bg-blue-800"
               >
                 View Application Details
               </Link>

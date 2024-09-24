@@ -118,7 +118,7 @@ const ApplicationDetailsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <main>
             <div className="bg-white p-6 rounded-lg shadow-md">
-              <h2 className="text-3xl font-bold mb-6 text-indigo-600">Application Details</h2>
+              <h2 className="text-3xl font-bold mb-6 text-blue-600">Application Details</h2>
               <div className="mb-6">
                 <h3 className="text-xl font-semibold mb-2">Job: {application.job?.title}</h3>
                 <p className="text-gray-600 flex items-center">
@@ -151,7 +151,7 @@ const ApplicationDetailsPage = () => {
                   </h4>
                   <button
                     onClick={handleViewCV}
-                    className="text-indigo-500 hover:text-indigo-600 flex items-center"
+                    className="text-blue-500 hover:text-blue-600 flex items-center"
                   >
                     <FaLink className="mr-2" /> View CV
                   </button>
@@ -172,7 +172,7 @@ const ApplicationDetailsPage = () => {
             <div className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-xl font-bold mb-6">Additional Information</h3>
               <div className="space-y-4">
-                <p className="text-gray-600 font-semibold">Status: <span className="text-indigo-600">{application.status}</span></p>
+                <p className="text-gray-600 font-semibold">Status: <span className="text-blue-600">{application.status}</span></p>
                 {application.status === 'Accepted' && (<p className="text-gray-600 font-semibold">We'll notify {application.applicant?.displayName} that you will be in contact with them shortly.</p>)}
                 {application.applicant?._id !== currentUserId && ( // Check if the user is not the job poster
                   <div className="flex space-x-2 mt-4"> 

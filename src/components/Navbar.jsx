@@ -45,7 +45,7 @@ const Navbar = ({ isAuthenticated }) => {
       };
 
   return (
-    <nav className='bg-blue-700 border-b border-blue-500'>
+    <nav className='bg-blue-900 border-b border-blue-800'> {/* Updated colors here */}
       <div className='mx-auto max-w-7xl px-2 sm:px-6 lg:px-8'>
         <div className='flex h-20 items-center justify-between'>
           <div className='flex flex-1 items-center justify-center md:items-stretch md:justify-start'>

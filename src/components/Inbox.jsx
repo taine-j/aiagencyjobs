@@ -63,11 +63,11 @@ const Inbox = () => {
       <div className="container mx-auto max-w-6xl">
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           <div className="p-8">
-            <h2 className="text-3xl font-bold mb-8 text-center text-indigo-600 pb-16">Your Job Applications</h2>
+            <h2 className="text-3xl font-bold mb-8 text-center text-blue-600 pb-16">Your Job Applications</h2>
             
             <div className="grid md:grid-cols-2 gap-8">
               <div>
-                <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Applications Sent</h3>
+                <h3 className="text-2xl font-semibold mb-4 text-blue-600">Applications Sent</h3>
                 {applications.sent && applications.sent.length > 0 ? (
                   <ApplicationList 
                     applications={applications.sent} 
@@ -80,7 +80,7 @@ const Inbox = () => {
               </div>
               
               <div className="md:border-l md:border-gray-200 md:pl-8">
-                <h3 className="text-2xl font-semibold mb-4 text-indigo-500">Applications Received</h3>
+                <h3 className="text-2xl font-semibold mb-4 text-blue-600">Applications Received</h3>
                 {applications.received && applications.received.length > 0 ? (
                   <ApplicationList 
                     applications={applications.received} 
