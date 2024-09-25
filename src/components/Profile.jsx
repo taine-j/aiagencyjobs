@@ -15,7 +15,6 @@ const Profile = () => {
   const [profilePicture, setProfilePicture] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  
 
   useEffect(() => {
     const fetchUserData = () => {
@@ -50,7 +49,6 @@ const Profile = () => {
       companyDescription,
       techStack,
       profilePicture,
-      useCompanyName
     };
 
     axios.post('/api/update_profile', updatedProfile)
@@ -96,10 +94,10 @@ const Profile = () => {
   return (
     <section className='bg-gray-100 min-h-screen py-12 relative'>
       {isUpdating && (
-        <div className="absolute inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg flex items-center">
-            <Spinner size="large" />
-            <span className="ml-3 text-lg font-semibold">Updating Profile...</span>
+        <div className="absolute inset-0 backdrop-filter backdrop-blur-sm bg-white/30 flex items-center justify-center z-50">
+          <div className="bg-white bg-opacity-70 p-6 rounded-lg shadow-lg flex items-center">
+            <Spinner size="medium" color="blue" />
+            <span className="ml-3 text-lg font-semibold text-blue-900">Updating Profile...</span>
           </div>
         </div>
       )}
@@ -113,7 +111,7 @@ const Profile = () => {
                     <img className="rounded-full w-48 h-48 object-cover shadow-md mb-4" src={profilePicture} alt="Profile" />
                   ) : (
                     <div className="w-48 h-48 rounded-full bg-blue-200 flex items-center justify-center mb-4">
-                      <span className="text-4xl text-blue-900">{(useCompanyName ? companyName : user.displayName).charAt(0)}</span>
+                      <span className="text-4xl text-blue-900">{user.displayName.charAt(0)}</span>
                     </div>
                   )}
                   <input

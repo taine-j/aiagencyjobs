@@ -15,7 +15,6 @@ import EditJobPage from './pages/EditJobPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import LoginPage from './pages/LoginPage';
-import LogoutPage from './pages/LogoutPage';
 import ProfilePage from './pages/ProfilePage';
 import JobApplicationPage from './pages/JobApplicationPage';
 import InboxPage from './pages/InboxPage';
@@ -101,7 +100,7 @@ const App = () => {
 
   const router = createBrowserRouter(
     createRoutesFromElements(
-      <Route path='/' element={<MainLayout isAuthenticated={isAuthenticated}/>}>
+      <Route path='/' element={<MainLayout isAuthenticated={isAuthenticated} setIsAuthenticated={setIsAuthenticated}/>}>
         <Route index element={<HomePage />} />
         <Route path='/jobs' element={<JobsPage />} />
         <Route path='/add-job' element={<AddJobPage addJobSubmit={addJob} />} />
@@ -118,7 +117,6 @@ const App = () => {
         <Route path='/privacy-policy' element={<PrivacyPolicyPage />} />
         <Route path='/terms-of-service' element={<TermsOfServicePage />} />
         <Route path='/login' element={<LoginPage />} />
-        <Route path='/logout' element={<LogoutPage />} />
         <Route path='/profile' element={<ProfilePage />} /> 
         <Route path='/inbox' element={<InboxPage />} />
         <Route path='*' element={<NotFoundPage />} />

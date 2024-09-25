@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
 import axios from 'axios';
 import logo from '../assets/images/logo.png';
+import Logout from './Logout';
+import { useNavigate } from 'react-router-dom';
 
 // Define fetchPendingApplicationsCount outside of the component
 export const fetchPendingApplicationsCount = async () => {
@@ -14,7 +16,7 @@ export const fetchPendingApplicationsCount = async () => {
   }
 };
 
-const Navbar = ({ isAuthenticated }) => {
+const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
   const [pendingApplications, setPendingApplications] = useState(0);
 
   const updatePendingApplicationsCount = useCallback(async () => {
@@ -32,17 +34,16 @@ const Navbar = ({ isAuthenticated }) => {
       ? 'bg-black text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2'
       : 'text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2';
 
-      const handleLogin = (e) => {
-        e.preventDefault();
-        window.location.href = '/api/auth/google';
-      };
+  const navigate = useNavigate();
 
-      const handleLogout = (e) => {
-        e.preventDefault();
-        if (window.confirm('Are you sure you want to log out?')) {
-          window.location.href = '/api/logout';
-        }
-      };
+  const handleLogin = (e) => {
+    e.preventDefault();
+    window.location.href = '/api/auth/google';
+  };
+
+  const handleLogout = () => {
+    window.location.href = '/api/logout';
+  };
 
   return (
     <nav className='bg-blue-900 border-b border-blue-800'> {/* Updated colors here */}
@@ -89,9 +90,7 @@ const Navbar = ({ isAuthenticated }) => {
                 </NavLink>
                 )}
                 {isAuthenticated && (
-                <NavLink to='/logout' onClick={handleLogout} className={linkClass}>
-                  Logout
-                </NavLink>
+                  <Logout onLogout={handleLogout} buttonClassName={linkClass({isActive: false})} />
                 )}
               </div>
             </div>

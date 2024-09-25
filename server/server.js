@@ -184,46 +184,28 @@ app.delete('/jobs/:id', async (req, res) => {
 });
 
 // Route to update a job by ID
-app.put('/jobs/:id', (req, res) => {
+app.put('/jobs/:id', requireLogin, async (req, res) => {
   const jobId = req.params.id;
   const updatedJob = req.body;
 
-  fs.readFile(path.join(__dirname, '../data/jobs.json'), 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error reading the file:', err);
-      return res.status(500).json({ error: 'Unable to read data' });
+  try {
+    const job = await Job.findById(jobId);
+    if (!job) {
+      return res.status(404).json({ error: `Job with id ${jobId} not found` });
     }
 
-    try {
-      const parsedData = JSON.parse(data);
-      let jobs = parsedData.jobs;
-
-      if (Array.isArray(jobs)) {
-        const jobIndex = jobs.findIndex(job => job.id === jobId);
-
-                if (jobIndex !== -1) {
-                    jobs[jobIndex] = { ...jobs[jobIndex], ...updatedJob };
-
-          fs.writeFile(path.join(__dirname, '../data/jobs.json'), JSON.stringify({ jobs }), 'utf8', (err) => {
-            if (err) {
-              console.error('Error writing to the file:', err);
-              return res.status(500).json({ error: 'Unable to update job' });
-            }
-
-            res.json(jobs[jobIndex]);
-          });
-        } else {
-          res.status(404).json({ error: `Job with id ${jobId} not found` });
-        }
-      } else {
-        console.error('Data is not in expected array format:', jobs);
-        res.status(500).json({ error: 'Data is not in expected array format' });
-      }
-    } catch (parseError) {
-      console.error('Error parsing JSON data:', parseError);
-      res.status(500).json({ error: 'Error parsing JSON data' });
+    if (job.postedBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'You are not authorized to update this job' });
     }
-  });
+
+    Object.assign(job, updatedJob);
+    await job.save();
+
+    res.json(job);
+  } catch (error) {
+    console.error('Error updating job:', error);
+    res.status(500).json({ error: 'Unable to update job', details: error.message });
+  }
 });
 
 

@@ -8,7 +8,7 @@ const EditJobPage = ({ updateJobSubmit }) => {
   const [type, setType] = useState(job.type);
   const [location, setLocation] = useState(job.location);
   const [description, setDescription] = useState(job.description);
-  const [salary, setSalary] = useState(job.salary);
+  const [price, setPrice] = useState(job.price);
   const [companyName, setCompanyName] = useState(job.company.name);
   const [companyDescription, setCompanyDescription] = useState(
     job.company.description
@@ -28,7 +28,7 @@ const EditJobPage = ({ updateJobSubmit }) => {
       type,
       location,
       description,
-      salary,
+      price,
       company: {
         name: companyName,
         description: companyDescription,
@@ -45,7 +45,7 @@ const EditJobPage = ({ updateJobSubmit }) => {
   };
 
   return (
-    <section className='bg-indigo-50'>
+    <section className='bg-blue-50'>
       <div className='container m-auto max-w-2xl py-24'>
         <div className='bg-white px-6 py-8 mb-4 shadow-md rounded-md border m-4 md:m-0'>
           <form onSubmit={submitForm}>
@@ -68,10 +68,8 @@ const EditJobPage = ({ updateJobSubmit }) => {
                 value={type}
                 onChange={(e) => setType(e.target.value)}
               >
-                <option value='Full-Time'>Full-Time</option>
-                <option value='Part-Time'>Part-Time</option>
-                <option value='Remote'>Remote</option>
-                <option value='Internship'>Internship</option>
+                <option value='One Off'>One Off</option>
+                <option value='On Going'>On Going</option>
               </select>
             </div>
 
@@ -110,31 +108,22 @@ const EditJobPage = ({ updateJobSubmit }) => {
 
             <div className='mb-4'>
               <label
-                htmlFor='type'
+                htmlFor='price'
                 className='block text-gray-700 font-bold mb-2'
               >
-                Salary
+                Price
               </label>
-              <select
-                id='salary'
-                name='salary'
+              <textarea
+                id='price'
+                name='price'
                 className='border rounded w-full py-2 px-3'
+                rows='1'
+                placeholder='$200 on project completion, $50 per hour, etc'
                 required
-                value={salary}
-                onChange={(e) => setSalary(e.target.value)}
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
               >
-                <option value='Under $50K'>Under $50K</option>
-                <option value='$50K - 60K'>$50K - $60K</option>
-                <option value='$60K - 70K'>$60K - $70K</option>
-                <option value='$70K - 80K'>$70K - $80K</option>
-                <option value='$80K - 90K'>$80K - $90K</option>
-                <option value='$90K - 100K'>$90K - $100K</option>
-                <option value='$100K - 125K'>$100K - $125K</option>
-                <option value='$125K - 150K'>$125K - $150K</option>
-                <option value='$150K - 175K'>$150K - $175K</option>
-                <option value='$175K - 200K'>$175K - $200K</option>
-                <option value='Over $200K'>Over $200K</option>
-              </select>
+              </textarea>
             </div>
 
             <div className='mb-4'>
@@ -229,7 +218,7 @@ const EditJobPage = ({ updateJobSubmit }) => {
 
             <div>
               <button
-                className='bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-full w-full focus:outline-none focus:shadow-outline'
+                className='w-full bg-blue-900 text-white rounded-lg px-4 py-2 hover:bg-blue-800'
                 type='submit'
               >
                 Update Job
