@@ -13,6 +13,8 @@ const ApplicationForm = ({ jobId }) => {
 
   const navigate = useNavigate();
 
+  const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+
   // Function to remove whitespaces from file name
   const sanitizeFileName = (fileName) => {
     return fileName.replace(/\s+/g, '_');
@@ -44,7 +46,7 @@ const ApplicationForm = ({ jobId }) => {
     console.log('Form data:', Array.from(formData.entries()));
 
     try {
-      const response = await axios.post('/api/job-applications', formData, {
+      const response = await axios.post(`/${API_BASE_URL}/job-applications`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },

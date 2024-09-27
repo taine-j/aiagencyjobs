@@ -5,10 +5,12 @@ import logo from '../assets/images/logo.png';
 import Logout from './Logout';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+
 // Define fetchPendingApplicationsCount outside of the component
 export const fetchPendingApplicationsCount = async () => {
   try {
-    const response = await axios.get('/api/pending-applications-count', { withCredentials: true });
+    const response = await axios.get(`/${API_BASE_URL}/pending-applications-count`, { withCredentials: true });
     return response.data.count;
   } catch (error) {
     console.error('Error fetching pending applications count:', error);
@@ -17,6 +19,7 @@ export const fetchPendingApplicationsCount = async () => {
 };
 
 const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
+
   const [pendingApplications, setPendingApplications] = useState(0);
 
   const updatePendingApplicationsCount = useCallback(async () => {
@@ -38,11 +41,11 @@ const Navbar = ({ isAuthenticated, setIsAuthenticated }) => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    window.location.href = '/api/auth/google';
+    window.location.href = `/${API_BASE_URL}/auth/google`;
   };
 
   const handleLogout = () => {
-    window.location.href = '/api/logout';
+    window.location.href = `/${API_BASE_URL}/logout`;
   };
 
   return (

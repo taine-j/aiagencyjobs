@@ -14,10 +14,12 @@ const ApplicationDetailsPage = () => {
   const [currentUserId, setCurrentUserId] = useState(null);
   const navigate = useNavigate();
 
+  const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+
   useEffect(() => {
     const fetchApplicationDetails = async () => {
       try {
-        const response = await axios.get(`/api/applications/${id}`);
+        const response = await axios.get(`/${API_BASE_URL}/applications/${id}`);
         setApplication(response.data);
       } catch (error) {
         console.error('Error fetching application details:', error);
@@ -33,7 +35,7 @@ const ApplicationDetailsPage = () => {
   useEffect(() => {
     const fetchUserId = async () => {
       try {
-        const response = await axios.get('/api/current_user');
+        const response = await axios.get(`/${API_BASE_URL}/current_user`);
       const res = response.data;
       const userId = res.id;
       setCurrentUserId(userId);
@@ -50,7 +52,7 @@ const ApplicationDetailsPage = () => {
   const handleViewCV = async () => {
     if (application.cvPath) {
       try {
-        const response = await axios.get(`/api/applications/${id}/cv-url`, {
+        const response = await axios.get(`/${API_BASE_URL}/applications/${id}/cv-url`, {
           withCredentials: true
         });
         const { url } = response.data;
@@ -73,7 +75,7 @@ const ApplicationDetailsPage = () => {
   const handleStatusUpdate = async (newStatus) => {
     try {
       console.log('Updating status to:', newStatus); // Debugging log
-      const response = await axios.post(`/api/applications/${id}/status`, 
+      const response = await axios.post(`/${API_BASE_URL}/applications/${id}/status`, 
         { status: newStatus },
         { withCredentials: true }
       );
@@ -92,7 +94,7 @@ const ApplicationDetailsPage = () => {
 
   const handleDelete = async () => {
     try {
-      const response = await axios.post(`/api/applications/${id}/delete`, {}, { withCredentials: true });
+      const response = await axios.post(`/${API_BASE_URL}/applications/${id}/delete`, {}, { withCredentials: true });
       
       if (response.status === 200) {
         toast.success('Application deleted successfully');

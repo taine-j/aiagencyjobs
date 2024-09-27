@@ -29,11 +29,13 @@ const JobPage = ({ deleteJob }) => {
   const fromProfile = location.state?.from === 'profile';
   const fromInbox = location.state?.from === 'inbox';
 
+  const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+
   useEffect(() => {
     const fetchJobAndUserData = async () => {
       try {
         const jobData = await jobLoader({ params: { id } });
-        const userRes = await fetch('/api/current_user', { credentials: 'include' });
+        const userRes = await fetch(`/${API_BASE_URL}/current_user`, { credentials: 'include' });
         const userData = await userRes.json();
         
         console.log('user data',userData)
