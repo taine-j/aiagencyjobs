@@ -19,7 +19,6 @@ import ProfilePage from './pages/ProfilePage';
 import JobApplicationPage from './pages/JobApplicationPage';
 import InboxPage from './pages/InboxPage';
 import ApplicationDetailsPage from './pages/ApplicationDetailsPage';
-import axios from 'axios';
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
