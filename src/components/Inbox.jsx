@@ -11,7 +11,7 @@ const Inbox = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     fetchApplications();
@@ -19,7 +19,7 @@ const Inbox = () => {
 
   const fetchApplications = async () => {
     try {
-      const response = await axios.get(`/${API_BASE_URL}api/job-applications`, { withCredentials: true });
+      const response = await axios.get(`${API_BASE_URL}/job-applications`, { withCredentials: true });
       console.log('Server response:', response.data);
 
       if (response.data && typeof response.data === 'object') {

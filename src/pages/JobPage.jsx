@@ -3,9 +3,10 @@ import { useState, useEffect } from 'react';
 import { FaArrowLeft, FaMapMarker } from 'react-icons/fa';
 import Spinner from '../components/Spinner';
 import { toast } from 'react-toastify';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export const jobLoader = async ({ params }) => {
-  const res = await fetch(`/api/jobs/${params.id}`, {
+  const res = await fetch(`${API_BASE_URL}/jobs/${params.id}`, {
     credentials: 'include'
   });
   if (!res.ok) {
@@ -29,13 +30,13 @@ const JobPage = ({ deleteJob }) => {
   const fromProfile = location.state?.from === 'profile';
   const fromInbox = location.state?.from === 'inbox';
 
-  const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchJobAndUserData = async () => {
       try {
         const jobData = await jobLoader({ params: { id } });
-        const userRes = await fetch(`/${API_BASE_URL}/current_user`, { credentials: 'include' });
+        const userRes = await fetch(`${API_BASE_URL}/current_user`, { credentials: 'include' });
         const userData = await userRes.json();
         
         console.log('user data',userData)

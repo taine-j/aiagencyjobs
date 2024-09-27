@@ -7,12 +7,12 @@ const JobListings = ({ isHome = false }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     const fetchJobs = async () => {
       try {
-        const res = await fetch(`/${API_BASE_URL}/jobs${isHome ? '?_limit=3' : ''}`);
+        const res = await fetch(`${API_BASE_URL}/jobs${isHome ? '?_limit=3' : ''}`);
         if (!res.ok) {
           throw new Error('Failed to fetch jobs');
         }

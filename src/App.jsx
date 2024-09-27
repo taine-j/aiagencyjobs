@@ -19,19 +19,18 @@ import ProfilePage from './pages/ProfilePage';
 import JobApplicationPage from './pages/JobApplicationPage';
 import InboxPage from './pages/InboxPage';
 import ApplicationDetailsPage from './pages/ApplicationDetailsPage';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
-
   useEffect(() => {
     // Check if the user is authenticated
     const checkAuth = async () => {
       try {
-        const res = await fetch(`/${API_BASE_URL}/current_user`, {
+        const res = await fetch(`${API_BASE_URL}/current_user`, {
           credentials: 'include', // Ensure cookies are sent with the request
         });
         if (res.ok) {
@@ -50,7 +49,7 @@ const App = () => {
   // Add New Job
   const addJob = async (newJob) => {
     try {
-      const res = await fetch(`/${API_BASE_URL}/jobs`, {
+      const res = await fetch(`${API_BASE_URL}/jobs`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +72,7 @@ const App = () => {
   // Delete Job
   const deleteJob = async (id) => {
     try {
-      const res = await fetch(`/${API_BASE_URL}/jobs/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/jobs/${id}`, {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -90,7 +89,7 @@ const App = () => {
 
   // Update Job
   const updateJob = async (job) => {
-    const res = await fetch(`/${API_BASE_URL}/jobs/${job.id}`, {
+    const res = await fetch(`${API_BASE_URL}/jobs/${job.id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

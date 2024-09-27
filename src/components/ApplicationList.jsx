@@ -4,11 +4,11 @@ import { toast } from 'react-toastify';
 
 const ApplicationList = ({ applications = [], type, onStatusUpdate, onApplicationAction }) => {
 
-  const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   const handleStatusUpdate = async (applicationId, newStatus) => {
     try {
-      const response = await axios.post(`/${API_BASE_URL}/applications/${applicationId}/status`, 
+      const response = await axios.post(`${API_BASE_URL}/applications/${applicationId}/status`, 
         { status: newStatus },
         { withCredentials: true }
       );
@@ -37,8 +37,8 @@ const ApplicationList = ({ applications = [], type, onStatusUpdate, onApplicatio
         throw new Error(`Invalid action: ${action}`);
       }
 
-      console.log(`Sending request to: /${API_BASE_URL}/applications/${applicationId}/${endpoint}`); // Debug log
-      const response = await axios.post(`/${API_BASE_URL}/applications/${applicationId}/${endpoint}`, 
+      console.log(`Sending request to: ${API_BASE_URL}/applications/${applicationId}/${endpoint}`); // Debug log
+      const response = await axios.post(`${API_BASE_URL}/applications/${applicationId}/${endpoint}`, 
         {},
         { withCredentials: true }
       );

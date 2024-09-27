@@ -16,12 +16,12 @@ const Profile = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
-  const API_BASE_URL = import.meta.env.REACT_APP_API_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   
   useEffect(() => {
     const fetchUserData = () => {
-      axios.get(`/${API_BASE_URL}/current_user`)
+      axios.get(`${API_BASE_URL}/current_user`, { withCredentials: true })
         .then(response => {
           const userData = response.data;
           setUser(userData);
@@ -54,7 +54,7 @@ const Profile = () => {
       profilePicture,
     };
 
-    axios.post(`/${API_BASE_URL}/update_profile`, updatedProfile)
+    axios.post(`${API_BASE_URL}/update_profile`, updatedProfile)
       .then(response => {
         console.log('Profile updated successfully:', response.data);
         setUser(response.data);
