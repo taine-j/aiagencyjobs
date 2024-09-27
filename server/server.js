@@ -47,6 +47,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Allowed origins array
 const allowedOrigins = ['http://localhost:3000', 'https://aiagencyjobs.com'];
 
+
 // Enable CORS
 app.use(cors({
   origin: function (origin, callback) {
