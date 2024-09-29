@@ -49,7 +49,6 @@ app.use(cors({
   credentials: true
 }));
 
-
 // Configure authentication
 configureAuth(app);
 
