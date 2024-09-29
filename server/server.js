@@ -44,20 +44,9 @@ app.use(express.static(path.join(__dirname, '../src')));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Allowed origins array
-const allowedOrigins = ['http://localhost:3000', 'https://aiagencyjobs.com'];
-
-
-// Enable CORS
 app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'));
-    }
-  },
-  credentials: true,
+  origin: ['http://localhost:3000', 'https://aiagencyjobs.com'],
+  credentials: true
 }));
 
 
