@@ -36,7 +36,7 @@ export function configureAuth(app) {
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: REDIRECT_URI,
+    callbackURL: '/auth/google/callback',
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
