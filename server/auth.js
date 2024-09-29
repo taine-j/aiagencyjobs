@@ -9,8 +9,11 @@ export function configureAuth(app) {
   const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
   const NODE_ENV = process.env.NODE_ENV || 'development';
   const REDIRECT_URI = NODE_ENV === 'production' 
-    ? 'https://aiagencyjobs.com/auth/google/callback'
+    ? 'https://aiagencyjobs-66f14b2f7923.herokuapp.com/auth/google/callback'
     : 'http://localhost:3000/auth/google/callback';
+
+console.log('Current NODE_ENV:', process.env.NODE_ENV);
+console.log('Current REDIRECT_URI:', REDIRECT_URI);
 
   // Configure session middleware
   app.use(session({ 
@@ -36,7 +39,7 @@ export function configureAuth(app) {
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: '/auth/google/callback',
+    callbackURL: REDIRECT_URI,
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -80,7 +83,7 @@ export function configureAuth(app) {
   app.get('/auth/google',
     passport.authenticate('google', { scope: ['openid', 'profile', 'email'] })
   );
-
+ 
   app.get('/auth/google/callback', 
     passport.authenticate('google', { 
       failureRedirect: NODE_ENV === 'production' ? 'https://aiagencyjobs.com/login' : 'http://localhost:3000/login'
@@ -96,7 +99,11 @@ export function configureAuth(app) {
         console.error('Error during logout:', err);
         return res.status(500).json({ error: 'Failed to logout' });
       }
-      res.redirect('/');
+       // Redirect based on the environment
+    const redirectUrl = NODE_ENV === 'production' 
+    ? 'https://aiagencyjobs.com'
+    : 'http://localhost:3000';
+    res.redirect(redirectUrl);
     });
   });
 
