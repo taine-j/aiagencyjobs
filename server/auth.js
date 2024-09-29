@@ -99,11 +99,10 @@ console.log('Current REDIRECT_URI:', REDIRECT_URI);
         console.error('Error during logout:', err);
         return res.status(500).json({ error: 'Failed to logout' });
       }
-       // Redirect based on the environment
-    const redirectUrl = NODE_ENV === 'production' 
-    ? 'https://aiagencyjobs.com'
-    : 'http://localhost:3000';
-    res.redirect(redirectUrl);
+      const redirectUrl = NODE_ENV === 'production' 
+        ? 'https://aiagencyjobs-66f14b2f7923.herokuapp.com'
+        : 'http://localhost:3000';
+      res.redirect(redirectUrl);
     });
   });
 
