@@ -14,6 +14,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
 
+const FRONTEND_URL = process.env.NODE_ENV === 'production' ? 'https://aiagencyjobs.com' : 'http://localhost:3000';
+
 const requireLogin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'You must be logged in to do this' });
@@ -45,7 +47,8 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://aiagencyjobs.com'],
+  origin: FRONTEND_URL,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
 
