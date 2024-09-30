@@ -7,7 +7,8 @@ import User from '../models/User.js'; // Import the User model
 export function configureAuth(app) {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const BASE_URL = process.env.NODE_ENV === 'production' ? 'https://aiagencyjobs.com' : 'http://localhost:3000';
+  const BACKEND_URL = process.env.NODE_ENV === 'production' ? 'https://aiagencyjobs-66f14b2f7923.herokuapp.com' : 'http://localhost:3000';
+  const FRONTEND_URL = process.env.NODE_ENV === 'production' ? 'https://aiagencyjobs.com' : 'http://localhost:3000';
 
   // Configure session middleware
   app.use(session({ 
@@ -33,7 +34,7 @@ export function configureAuth(app) {
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: '/auth/google/callback',
+    callbackURL: `${BACKEND_URL}/auth/google/callback`,
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -79,9 +80,9 @@ export function configureAuth(app) {
   );
 
   app.get('/auth/google/callback', 
-    passport.authenticate('google', { failureRedirect: `${BASE_URL}/login` }),
+    passport.authenticate('google', { failureRedirect: `${FRONTEND_URL}/login` }),
     (req, res) => {
-      res.redirect(BASE_URL);
+      res.redirect(FRONTEND_URL);
     }
   );
 
@@ -91,7 +92,7 @@ export function configureAuth(app) {
         console.error('Error during logout:', err);
         return res.status(500).json({ error: 'Failed to logout' });
       }
-      res.redirect(BASE_URL);
+      res.redirect(FRONTEND_URL);
     });
   });
 
