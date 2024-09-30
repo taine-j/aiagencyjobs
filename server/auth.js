@@ -7,13 +7,7 @@ import User from '../models/User.js'; // Import the User model
 export function configureAuth(app) {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
   const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-  const NODE_ENV = process.env.NODE_ENV || 'development';
-  const REDIRECT_URI = NODE_ENV === 'production' 
-    ? 'https://aiagencyjobs-66f14b2f7923.herokuapp.com/auth/google/callback'
-    : 'http://localhost:3000/auth/google/callback';
-
-console.log('Current NODE_ENV:', process.env.NODE_ENV);
-console.log('Current REDIRECT_URI:', REDIRECT_URI);
+  const BASE_URL = process.env.NODE_ENV === 'production' ? 'https://aiagencyjobs.com' : 'http://localhost:3000';
 
   // Configure session middleware
   app.use(session({ 
@@ -39,7 +33,7 @@ console.log('Current REDIRECT_URI:', REDIRECT_URI);
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: REDIRECT_URI,
+    callbackURL: '/auth/google/callback',
   },
   async (accessToken, refreshToken, profile, done) => {
     try {
@@ -83,13 +77,11 @@ console.log('Current REDIRECT_URI:', REDIRECT_URI);
   app.get('/auth/google',
     passport.authenticate('google', { scope: ['openid', 'profile', 'email'] })
   );
- 
+
   app.get('/auth/google/callback', 
-    passport.authenticate('google', { 
-      failureRedirect: NODE_ENV === 'production' ? 'https://aiagencyjobs.com/login' : 'http://localhost:3000/login'
-    }),
+    passport.authenticate('google', { failureRedirect: `${BASE_URL}/login` }),
     (req, res) => {
-      res.redirect(NODE_ENV === 'production' ? 'https://aiagencyjobs.com' : 'http://localhost:3000');
+      res.redirect(BASE_URL);
     }
   );
 
@@ -99,10 +91,7 @@ console.log('Current REDIRECT_URI:', REDIRECT_URI);
         console.error('Error during logout:', err);
         return res.status(500).json({ error: 'Failed to logout' });
       }
-      const redirectUrl = NODE_ENV === 'production' 
-        ? 'https://aiagencyjobs-66f14b2f7923.herokuapp.com'
-        : 'http://localhost:3000';
-      res.redirect(redirectUrl);
+      res.redirect(BASE_URL);
     });
   });
 
