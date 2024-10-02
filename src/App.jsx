@@ -27,22 +27,34 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const authSuccess = urlParams.get('auth') === 'success';
+    
+    if (authSuccess) {
+      setIsAuthenticated(true);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     // Check if the user is authenticated
     const checkAuth = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/current_user`, {
-          credentials: 'include', // Ensure cookies are sent with the request
+          credentials: 'include',
         });
         if (res.ok) {
+          const userData = await res.json();
+          console.log('User authenticated:', userData.id);
           setIsAuthenticated(true);
         } else {
+          console.log('Authentication failed:', res.status, res.statusText);
           setIsAuthenticated(false);
         }
       } catch (error) {
+        console.error('Error checking authentication:', error);
         setIsAuthenticated(false);
       }
     };
-  
+
     checkAuth();
   }, []);
 

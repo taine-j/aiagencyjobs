@@ -26,7 +26,7 @@ export function configureAuth(app) {
       secure: process.env.NODE_ENV === 'production',
       httpOnly: true,
       sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.aiagencyjobs.com' : 'localhost' // Explicitly set domain
+      domain: process.env.NODE_ENV === 'production' ? 'aiagencyjobs.com' : 'localhost' // Explicitly set domain
     },
     store: MongoStore.create({
       mongoUrl: process.env.MONGODB_URI,
