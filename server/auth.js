@@ -18,14 +18,14 @@ export function configureAuth(app) {
 
   // Configure session middleware
   app.use(session({ 
-    secret: process.env.SESSION_SECRET || 'your-secret-key', 
+    secret: process.env.SESSION_SECRET, 
     resave: false,  
     saveUninitialized: false,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       httpOnly: true,
-      sameSite: 'none' // This allows cookies to be sent in cross-origin requests
+      sameSite: 'lax' 
     },
     store: MongoStore.create({
       mongoUrl: process.env.MONGODB_URI,

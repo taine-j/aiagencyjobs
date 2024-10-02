@@ -7,7 +7,7 @@ const Login = () => {
     const handleLogin = () => {
       console.log('Initiating Google login...');
       console.log('API_BASE_URL:', API_BASE_URL);
-      window.location.replace(`${API_BASE_URL}/auth/google`);
+      window.location.href = `${API_BASE_URL}/auth/google`;
     };
   
     return (
