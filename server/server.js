@@ -45,15 +45,13 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.use(cors({
-  origin: process.env.NODE_ENV === 'production' 
-    ? 'https://aiagencyjobs.com' 
-    : 'http://localhost:3000',
+  origin: ['https://aiagencyjobs.com', 'https://aiagencyjobs-66f14b2f7923.herokuapp.com', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.enable('trust proxy'); // Important for Heroku
+app.set('trust proxy', 1);
 
 // Configure authentication
 configureAuth(app);

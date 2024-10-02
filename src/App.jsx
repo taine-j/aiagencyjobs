@@ -40,6 +40,10 @@ const App = () => {
       try {
         const res = await fetch(`${API_BASE_URL}/current_user`, {
           credentials: 'include',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
         });
         if (res.ok) {
           const userData = await res.json();
