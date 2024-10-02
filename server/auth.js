@@ -2,7 +2,7 @@ import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import session from 'express-session';
 import MongoStore from 'connect-mongo';
-import User from '../models/User.js';
+import User from '../models/User.js'; // Import the User model
 
 export function configureAuth(app) {
   const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -16,56 +16,55 @@ export function configureAuth(app) {
     ? 'https://aiagencyjobs.com'
     : 'http://localhost:3000';
 
-  // Updated session configuration
+  // Configure session middleware
   app.use(session({ 
     secret: process.env.SESSION_SECRET || 'your-secret-key', 
     resave: false,  
     saveUninitialized: false,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: true, // Always use secure in production
+      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
       httpOnly: true,
-      sameSite: 'none', // This allows cross-site cookie setting
-      domain: process.env.NODE_ENV === 'production' ? 'aiagencyjobs.com' : 'localhost'
+      sameSite: 'none' // This allows cookies to be sent in cross-origin requests
     },
     store: MongoStore.create({
       mongoUrl: process.env.MONGODB_URI,
-      ttl: 14 * 24 * 60 * 60 // 14 days
+      ttl: 14 * 24 * 60 * 60 // = 14 days. Default
     })
   }));
 
+  // Add this line after your session configuration
+  app.set('trust proxy', 1);
+
+  // Initialize Passport and restore authentication state, if any, from the session
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const callbackURL = process.env.NODE_ENV === 'production' 
-    ? `${BACKEND_URL}/auth/google/callback` 
-    : '/auth/google/callback';
+  const callBackURL = process.env.NODE_ENV === 'production' ? `${BACKEND_URL}/auth/google/callback` : '/auth/google/callback'
 
-  // Updated Google Strategy configuration
+  // Configure Passport with the Google strategy
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: callbackURL,
+    callbackURL: callBackURL,
     proxy: true
   },
   async (accessToken, refreshToken, profile, done) => {
+    console.log('Google Strategy Callback - Profile:', profile);
     try {
+      // Check if the user already exists in your database
       let user = await User.findOne({ googleId: profile.id });
 
       if (!user) {
+        // If the user does not exist, create a new user
         const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null;
-        try {
-          user = await User.create({
-            googleId: profile.id,
-            displayName: profile.displayName,
-            email: email,
-            emails: profile.emails,
-            photos: profile.photos,
-          });
-        } catch (createError) {
-          console.error('Error creating new user:', createError);
-          return done(createError, null);
-        }
+        user = await User.create({
+          googleId: profile.id,
+          displayName: profile.displayName,
+          email: email,
+          emails: profile.emails,
+          photos: profile.photos,
+        });
       }
 
       return done(null, user);
@@ -75,80 +74,52 @@ export function configureAuth(app) {
     }
   }));
 
-  // Updated serialization
+  // Serialize user information into the session
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });
 
-  // Updated deserialization with error handling
+  // Deserialize user information from the session
   passport.deserializeUser(async (id, done) => {
     try {
       const user = await User.findById(id);
-      if (!user) {
-        return done(new Error('User not found'), null);
-      }
       done(null, user);
     } catch (err) {
-      console.error('Error deserializing user:', err);
       done(err, null);
     }
   });
 
-  // Google authentication route
+  // Auth routes
   app.get('/auth/google',
-    passport.authenticate('google', { 
-      scope: ['openid', 'profile', 'email'],
-      prompt: 'select_account'
-    })
+    passport.authenticate('google', { scope: ['openid', 'profile', 'email'] })
   );
 
-  // Updated callback route with explicit login and error handling
   app.get('/auth/google/callback', 
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
-      console.log('Google OAuth callback reached');
-      console.log('User:', req.user);
-      console.log('Session:', req.session);
-
-      if (req.user) {
-        req.login(req.user, (err) => {
-          if (err) {
-            console.error('Error logging in user:', err);
-            return res.redirect(`${FRONTEND_URL}/login`);
-          }
-          console.log('User authenticated:', req.user.id);
-          res.redirect(FRONTEND_URL);
-        });
-      } else {
-        console.log('Authentication failed');
-        res.redirect(`${FRONTEND_URL}/login`);
-      }
+      console.log('Google Auth Callback - User:', req.user);
+      const redirectUrl = process.env.NODE_ENV === 'production'
+        ? 'https://aiagencyjobs.com'
+        : 'http://localhost:3000';
+      res.redirect(redirectUrl);
     }
   );
 
-  // Updated logout route
   app.get('/logout', (req, res) => {
     req.logout((err) => {
       if (err) {
         console.error('Error during logout:', err);
         return res.status(500).json({ error: 'Failed to logout' });
       }
-      req.session.destroy((err) => {
-        if (err) {
-          console.error('Error destroying session:', err);
-        }
-        res.redirect(FRONTEND_URL);
-      });
+      res.redirect(FRONTEND_URL);
     });
   });
 
-  // Updated current user route with additional checks
   app.get('/current_user', (req, res) => {
-    console.log('Session:', req.session);
-    console.log('User:', req.user);
-    console.log('Is Authenticated:', req.isAuthenticated());
-
-    if (req.isAuthenticated() && req.user) {
+    console.log('Current User Request - Session:', req.session);
+    console.log('Current User Request - User:', req.user);
+    console.log('Current User Request - Is Authenticated:', req.isAuthenticated());
+    if (req.isAuthenticated()) {
       const userWithoutProfilePicture = {
         id: req.user.id,
         displayName: req.user.displayName,
@@ -165,10 +136,10 @@ export function configureAuth(app) {
       console.log('User is authenticated:', userWithoutProfilePicture);
       res.json({
         ...userWithoutProfilePicture,
-        profilePicture: req.user.profilePicture
+        profilePicture: req.user.profilePicture // Include profilePicture in the response
       });
     } else {
-      console.log('User is not authenticated or user object is missing');
+      console.log('User is not authenticated');
       res.status(401).json({ error: 'Not authenticated' });
     }
   });

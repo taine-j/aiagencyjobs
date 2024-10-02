@@ -44,17 +44,21 @@ app.use(express.static(path.join(__dirname, '../src')));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-app.set('trust proxy', 1);
-
-// Configure authentication
-configureAuth(app);
 
 app.use(cors({
-  origin: ['https://aiagencyjobs.com', 'https://aiagencyjobs-66f14b2f7923.herokuapp.com', 'http://localhost:3000'],
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://aiagencyjobs.com', 'https://aiagencyjobs-66f14b2f7923.herokuapp.com']
+    : ['http://localhost:3000', 'http://localhost:1967'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// Add this line after your CORS configuration
+app.set('trust proxy', 1);
+
+// Configure authentication
+configureAuth(app);
 
 // Configure AWS
 const s3Client = new S3Client({
