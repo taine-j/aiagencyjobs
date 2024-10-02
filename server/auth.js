@@ -16,6 +16,8 @@ export function configureAuth(app) {
     ? 'https://aiagencyjobs.com'
     : 'http://localhost:3000';
 
+  const isProduction = process.env.NODE_ENV === 'production';
+
   // Configure session middleware
   app.use(session({ 
     secret: process.env.SESSION_SECRET, 
@@ -23,9 +25,9 @@ export function configureAuth(app) {
     saveUninitialized: false,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: process.env.NODE_ENV === 'production', // Use secure cookies in production
+      secure: isProduction, // Use secure cookies in production
       httpOnly: true,
-      sameSite: 'lax' 
+      sameSite: isProduction ? 'none' : 'lax' // 'none' for production, 'lax' for development
     },
     store: MongoStore.create({
       mongoUrl: process.env.MONGODB_URI,
@@ -33,7 +35,7 @@ export function configureAuth(app) {
     })
   }));
 
-  // Add this line after your session configuration
+  // Enable trust proxy
   app.set('trust proxy', 1);
 
   // Initialize Passport and restore authentication state, if any, from the session
@@ -98,7 +100,7 @@ export function configureAuth(app) {
     passport.authenticate('google', { failureRedirect: '/login' }),
     (req, res) => {
       console.log('Google Auth Callback - User:', req.user);
-      const redirectUrl = process.env.NODE_ENV === 'production'
+      const redirectUrl = isProduction
         ? 'https://aiagencyjobs.com'
         : 'http://localhost:3000';
       res.redirect(redirectUrl);
