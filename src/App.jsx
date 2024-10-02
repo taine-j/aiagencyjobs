@@ -27,15 +27,6 @@ const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const authSuccess = urlParams.get('auth') === 'success';
-    
-    if (authSuccess) {
-      setIsAuthenticated(true);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }
-
-    // Check if the user is authenticated
     const checkAuth = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/current_user`, {
@@ -49,6 +40,7 @@ const App = () => {
           const userData = await res.json();
           console.log('User authenticated:', userData.id);
           setIsAuthenticated(true);
+          // You might want to set user data in state here
         } else {
           console.log('Authentication failed:', res.status, res.statusText);
           setIsAuthenticated(false);

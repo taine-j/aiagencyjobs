@@ -114,14 +114,14 @@ export function configureAuth(app) {
         req.login(req.user, (err) => {
           if (err) {
             console.error('Error logging in user:', err);
-            return res.redirect(`${FRONTEND_URL}/login?error=auth_failed`);
+            return res.redirect(`${FRONTEND_URL}/login`);
           }
           console.log('User authenticated:', req.user.id);
-          res.redirect(`${FRONTEND_URL}?auth=success`);
+          res.redirect(FRONTEND_URL);
         });
       } else {
         console.log('Authentication failed');
-        res.redirect(`${FRONTEND_URL}/login?error=auth_failed`);
+        res.redirect(`${FRONTEND_URL}/login`);
       }
     }
   );
