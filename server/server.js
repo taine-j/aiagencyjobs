@@ -49,6 +49,8 @@ app.use(cors({
   credentials: true
 }));
 
+app.enable('trust proxy'); // Important for Heroku
+
 // Configure authentication
 configureAuth(app);
 
