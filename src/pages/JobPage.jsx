@@ -17,7 +17,7 @@ export const jobLoader = async ({ params }) => {
   return data;
 };
 
-const JobPage = ({ deleteJob }) => {
+const JobPage = ({ deleteJob, isAuthenticated }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -166,7 +166,7 @@ const JobPage = ({ deleteJob }) => {
                 </div>
               )}
 
-              {!isOwner && (
+              {!isOwner && isAuthenticated && (
                 <div className="mt-4">
                   <Link
                     to={`/apply/${job._id}`}

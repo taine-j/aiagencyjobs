@@ -113,7 +113,7 @@ const App = () => {
         />
         <Route
           path='/jobs/:id'
-          element={<JobPage deleteJob={deleteJob} />}
+          element={<JobPage deleteJob={deleteJob} isAuthenticated={isAuthenticated}/>}
           loader={jobLoader}
         />
         <Route path='/privacy-policy' element={<PrivacyPolicyPage />} />

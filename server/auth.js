@@ -10,7 +10,7 @@ export function configureAuth(app) {
   
   const BACKEND_URL = process.env.NODE_ENV === 'production' 
     ? 'https://aiagencyjobs-66f14b2f7923.herokuapp.com' 
-    : 'http://localhost:3000';
+    : 'http://localhost:1967';
 
   const FRONTEND_URL = process.env.NODE_ENV === 'production'
     ? 'https://aiagencyjobs.com'
@@ -19,7 +19,7 @@ export function configureAuth(app) {
   // Configure session middleware
   app.use(session({ 
     secret: process.env.SESSION_SECRET || 'your-secret-key', 
-    resave: false, 
+    resave: false,  
     saveUninitialized: false,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
@@ -37,11 +37,13 @@ export function configureAuth(app) {
   app.use(passport.initialize());
   app.use(passport.session());
 
+  const callBackURL = process.env.NODE_ENV === 'production' ? `${BACKEND_URL}/auth/google/callback` : '/auth/google/callback'
+
   // Configure Passport with the Google strategy
   passport.use(new GoogleStrategy({
     clientID: GOOGLE_CLIENT_ID,
     clientSecret: GOOGLE_CLIENT_SECRET,
-    callbackURL: `${BACKEND_URL}/auth/google/callback`,
+    callbackURL: callBackURL,
     proxy: true
   },
   async (accessToken, refreshToken, profile, done) => {
