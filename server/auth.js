@@ -23,10 +23,10 @@ export function configureAuth(app) {
     saveUninitialized: false,
     cookie: {
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-      secure: process.env.NODE_ENV === 'production',
+      secure: true, // Always use secure in production
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? 'aiagencyjobs-66f14b2f7923.herokuapp.com' : 'localhost'
+      sameSite: 'none', // This allows cross-site cookie setting
+      domain: process.env.NODE_ENV === 'production' ? 'aiagencyjobs.com' : 'localhost'
     },
     store: MongoStore.create({
       mongoUrl: process.env.MONGODB_URI,
