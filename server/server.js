@@ -325,7 +325,7 @@ app.get('/applications/:id', requireLogin, async (req, res) => {
 });
 
 // Route to update user profile
-app.post('/update_profile', async (req, res) => {
+app.post('/update_profile', requireLogin, async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Unauthorized' });
     }

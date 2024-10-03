@@ -54,7 +54,7 @@ const Profile = () => {
       profilePicture,
     };
 
-    axios.post(`${API_BASE_URL}/update_profile`, updatedProfile)
+    axios.post(`${API_BASE_URL}/update_profile`, updatedProfile, { withCredentials: true })
       .then(response => {
         console.log('Profile updated successfully:', response.data);
         setUser(response.data);
