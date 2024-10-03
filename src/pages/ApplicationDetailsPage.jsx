@@ -19,7 +19,7 @@ const ApplicationDetailsPage = () => {
   useEffect(() => {
     const fetchApplicationDetails = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/applications/${id}`);
+        const response = await axios.get(`${API_BASE_URL}/applications/${id}`, { withCredentials: true });
         setApplication(response.data);
       } catch (error) {
         console.error('Error fetching application details:', error);
@@ -35,7 +35,7 @@ const ApplicationDetailsPage = () => {
   useEffect(() => {
     const fetchUserId = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/current_user`);
+        const response = await axios.get(`${API_BASE_URL}/current_user`, { withCredentials: true });
       const res = response.data;
       const userId = res.id;
       setCurrentUserId(userId);
