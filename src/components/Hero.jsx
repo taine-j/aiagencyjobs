@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { FiArrowRight } from 'react-icons/fi';
 import AIAnimation from './AIAnimation';
 import GridBackground from './GridBackground'; // Add this import
@@ -28,13 +29,13 @@ const Hero = ({
               {title}
             </h1>
             <p className='text-xl text-blue-200 mb-8'>{subtitle}</p>
-            <button
-              onClick={() => window.location.href = '/jobs'}
-              className='bg-white text-blue-900 font-semibold py-3 px-6 rounded-full hover:bg-blue-100 transition duration-300 flex items-center'
+            <Link
+              to='/jobs'
+              className='bg-white text-blue-900 font-semibold py-3 px-6 rounded-full hover:bg-blue-100 transition duration-300 items-center inline-flex'
             >
               Get Started
               <FiArrowRight className='ml-2' />
-            </button>
+            </Link>
           </div>
         </div>
       </div>
