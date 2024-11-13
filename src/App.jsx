@@ -40,7 +40,7 @@ const App = () => {
           const userData = await res.json();
           console.log('User authenticated:', userData.id);
           setIsAuthenticated(true);
-          // You might want to set user data in state here
+      
         } else {
           console.log('Authentication failed:', res.status, res.statusText);
           setIsAuthenticated(false);
@@ -69,7 +69,7 @@ const App = () => {
         throw new Error('Failed to add job');
       }
       const savedJob = await res.json();
-      // You might want to update your local state or trigger a re-fetch of jobs here
+ 
       return savedJob;
     } catch (error) {
       console.error('Error adding job:', error);
@@ -88,7 +88,7 @@ const App = () => {
         const errorData = await res.json();
         throw new Error(errorData.error || 'Failed to delete job');
       }
-      // If successful, you might want to update your local state or trigger a re-fetch
+
     } catch (error) {
       console.error('Error deleting job:', error);
       throw error; // Re-throw the error so it can be handled by the component

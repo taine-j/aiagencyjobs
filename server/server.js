@@ -14,15 +14,18 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import multer from 'multer';
 import multerS3 from 'multer-s3';
 
+
+// Function to check if user is logged in
 const requireLogin = (req, res, next) => {
   if (!req.user) {
     return res.status(401).json({ error: 'You must be logged in to do this' });
-  }
-  next();
+  } 
+  next(); //Continues the request cycle if user exists 
 };
 
-dotenv.config();
+dotenv.config(); // Configs .env 
 
+// Connects to Mongo DB
 mongoose.connect(process.env.MONGODB_URI, { 
     serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
   }).then(() => {
@@ -31,8 +34,9 @@ mongoose.connect(process.env.MONGODB_URI, {
     console.error('Error connecting to MongoDB:', err);
   });
 
+// ES syntax to get filename and directory name
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = dirname(__filename); 
 
 const app = express();
 const PORT = process.env.PORT || 1967;
@@ -44,8 +48,8 @@ app.use(express.static(path.join(__dirname, '../src')));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-
-app.use(cors({
+// Dictates what web origins can make requests
+app.use(cors({ 
   origin: process.env.NODE_ENV === 'production' 
   ? 'https://aiagencyjobs.com'
   : 'http://localhost:3000',
@@ -54,15 +58,14 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Add this line after your CORS configuration
-app.set('trust proxy', 1);
+app.set('trust proxy', 1); // set to allow for secure cookies
 
 // Configure authentication
 configureAuth(app);
 
-// Configure AWS
+// Configure AWS with region and keys
 const s3Client = new S3Client({
-  region: process.env.MY_AWS_REGION,
+  region: process.env.MY_AWS_REGION, 
   credentials: {
     accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY,
@@ -71,11 +74,11 @@ const s3Client = new S3Client({
 
 // Configure multer for S3 uploads
 const upload = multer({
-  storage: multerS3({
-    s3: s3Client,
-    bucket: process.env.S3_BUCKET_NAME,
-    acl: 'private',
-    key: function (req, file, cb) {
+  storage: multerS3({ //sets multer to use s3 instead of local storage
+    s3: s3Client, //defines client 
+    bucket: process.env.S3_BUCKET_NAME,//defines bucket 
+    acl: 'private', // only authenticated requests can access bucket 
+    key: function (req, file, cb) { //creates a unique file name or key 
       console.log('Attempting to upload file:', file);
       const fileName = `${Date.now().toString()}-${file.originalname}`;
       console.log('Generated file name:', fileName);
@@ -84,9 +87,9 @@ const upload = multer({
     },
     metadata: function (req, file, cb) {
       cb(null, { fieldName: file.fieldname });
-    },
-    contentType: multerS3.AUTO_CONTENT_TYPE,
-    shouldTransform: function (req, file, cb) {
+    }, // stores filename in metadata 
+    contentType: multerS3.AUTO_CONTENT_TYPE, // sets content type in s3 to files mime type 
+    shouldTransform: function (req, file, cb) { // adds image processing capabilities and resizes image to fit into 800x600 box 
       cb(null, /^image/i.test(file.mimetype));
     },
     transforms: [
@@ -101,7 +104,7 @@ const upload = multer({
       },
     ],
   }),
-  fileFilter: (req, file, cb) => {
+  fileFilter: (req, file, cb) => { // checks mime types to ensure only pdfs are accepted
     console.log('File filter - File type:', file.mimetype);
     if (file.mimetype === 'application/pdf') {
       cb(null, true);
@@ -135,7 +138,7 @@ app.get('/jobs', async (req, res) => {
   app.post('/jobs', requireLogin, async (req, res) => {
     try {
       const jobData = req.body;
-      jobData.postedBy = req.user._id; // Assuming you want to associate the job with the current user
+      jobData.postedBy = req.user._id; 
   
       const newJob = new Job(jobData);
       await newJob.save();
@@ -215,7 +218,6 @@ app.put('/jobs/:id', requireLogin, async (req, res) => {
 });
 
 
-// Update your /job-applications route to use upload middleware directly
 app.post('/job-applications', upload.fields([
   { name: 'cv', maxCount: 1 },
   { name: 'supportingDocs', maxCount: 1 }
@@ -526,13 +528,13 @@ app.get('/applications/:id/:docType-url', requireLogin, async (req, res) => {
   }
 });
 
-// Add this near your other application routes
+
 app.post('/applications/:id/status', requireLogin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
 
-    console.log('Updating application status:', { id, status }); // Debugging log
+    console.log('Updating application status:', { id, status }); 
 
     if (!['Accepted', 'Rejected'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
@@ -545,8 +547,8 @@ app.post('/applications/:id/status', requireLogin, async (req, res) => {
       return res.status(404).json({ error: 'Application not found' });
     }
 
-    console.log('Application found:', application); // Debugging log
-    console.log('Job posted by:', application.job.postedBy); // Debugging log
+    console.log('Application found:', application); 
+    console.log('Job posted by:', application.job.postedBy); 
 
     // Check if the current user is the job poster
     if (application.job.postedBy.toString() !== req.user._id.toString()) {
